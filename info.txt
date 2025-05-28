@@ -1,0 +1,4 @@
+Off-Chain Implementations : 
+Username
+Email
+Password (Contains Option for changing password)
