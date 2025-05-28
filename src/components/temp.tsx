@@ -5,9 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { useWeb3 } from '@/contexts/Web3Context';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
-import { useProfile } from '../contexts/ProfileContext';
 
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
@@ -16,36 +13,7 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [mongoStatus, setMongoStatus] = useState<string | null>(null);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const { globalProfileImage } = useProfile();
 
-  useEffect(() => {
-    if (isConnected && address) {
-      fetchProfileData();
-    }
-  }, [isConnected, address]);
-  const fetchProfileData = async () => {
-    try {
-      const res = await fetch(
-        `http://localhost:3001/api/profile/show/${address}`
-      );
-      const data = await res.json();
-
-      if (data.success) {
-        console.log('Decrypted Profile Data:', data.data);
-        if (data.data.profileImage) {
-          setProfileImage(data.data.profileImage);
-        }
-      }
-    } catch (err: any) {
-      console.error('Error fetching profile:', err);
-      toast({
-        title: 'Error loading profile',
-        description: err.message,
-        variant: 'destructive',
-      });
-    }
-  };
   const handleMongoConnect = async () => {
     setMongoStatus('Connecting...');
     try {
@@ -76,6 +44,31 @@ const Navbar = () => {
     }
   };
 
+  const navigate = useNavigate();
+
+  const handleProfile = () => {};
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+    toast({
+      title: 'Logged out successfully',
+      description: 'You have been logged out of StorageX',
+    });
+  };
+
   const DropdownMenu: React.FC<{ children: React.ReactNode }> = ({
     children,
   }) => {
@@ -95,56 +88,31 @@ const Navbar = () => {
 
     return (
       <div className="relative group" ref={ref}>
-        <div className="relative rounded-full p-1 bg-[#00BFFF]/20">
-          <Avatar className="w-9 h-9 ring-1 ring-[#00BFFF] ring-offset-1 ring-offset-gray-900">
-            {globalProfileImage || profileImage ? (
-              <AvatarImage
-                src={globalProfileImage || profileImage}
-                alt="Profile"
-                className="w-full h-full object-cover rounded-full cursor-pointer"
-                onClick={() => setOpen((o) => !o)}
-                onError={(e) => {
-                  e.currentTarget.src = '';
-                  toast({
-                    title: 'Error loading image',
-                    description: 'Could not load profile image',
-                    variant: 'destructive',
-                  });
-                }}
-              />
-            ) : (
-              <AvatarFallback className="bg-gray-800 dark:bg-gray-700">
-                <img
-                  src="https://i.ibb.co/XZmv5M8X/profile.png"
-                  width={50}
-                  height={50}
-                  alt="Profile"
-                  onClick={() => setOpen((o) => !o)}
-                  className="cursor-pointer border-r-2 border-[#00BFFF] rounded-full transition-all duration-300 active:scale-95 hover:shadow-lg py-2"
-                  style={{
-                    boxShadow:
-                      theme === 'dark'
-                        ? '0 2px 8px #00BFFF33'
-                        : '0 2px 8px #00BFFF22',
-                  }}
-                />
-              </AvatarFallback>
-            )}
-          </Avatar>
-        </div>
+        <img
+          src="https://i.ibb.co/XZmv5M8X/profile.png"
+          width={50}
+          height={50}
+          alt="Profile"
+          onClick={() => setOpen((o) => !o)}
+          className="cursor-pointer border-r-2 border-[#00BFFF] rounded-full transition-all duration-300 active:scale-95 hover:shadow-lg py-2"
+          style={{
+            boxShadow:
+              theme === 'dark' ? '0 2px 8px #00BFFF33' : '0 2px 8px #00BFFF22',
+          }}
+        />
 
         <div
           className={`
-        absolute top-1/3 right-0 -translate-y-1/3
-        flex items-center
-        transition-all duration-300
-        overflow-hidden
-        pointer-events-none
-        group-hover:w-48 w-0
-        group-hover:pl-4 pl-0
-        h-14
-        bg-transparent
-      `}
+      absolute top-1/3 right-0 -translate-y-1/3
+      flex items-center
+      transition-all duration-300
+      overflow-hidden
+      pointer-events-none
+      group-hover:w-48 w-0
+      group-hover:pl-4 pl-0
+      h-14
+      bg-transparent
+    `}
           style={{ zIndex: 10 }}
         >
           <span className="text-[#00BFFF] text-sm font-mono bg-white dark:bg-gray-800 rounded px-2 py-1 shadow transition-opacity duration-300 opacity-0 group-hover:opacity-100">
@@ -159,46 +127,6 @@ const Navbar = () => {
       </div>
     );
   };
-
-  const handleProfile = () => {};
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const AvatarComponent = () => (
-    <div className="relative rounded-full p-2 bg-[#00BFFF]/20">
-      <Avatar className="w-32 h-32 ring-2 ring-[#00BFFF] ring-offset-2 ring-offset-gray-900">
-        {globalProfileImage || profileImage ? (
-          <AvatarImage
-            src={globalProfileImage || profileImage}
-            alt="Profile"
-            className="w-full h-full object-cover rounded-full"
-            onError={(e) => {
-              e.currentTarget.src = '';
-              toast({
-                title: 'Error loading image',
-                description: 'Could not load profile image',
-                variant: 'destructive',
-              });
-            }}
-          />
-        ) : (
-          <AvatarFallback className="bg-gray-800 dark:bg-gray-700">
-            <User className="w-16 h-16 text-[#00BFFF]" />
-          </AvatarFallback>
-        )}
-      </Avatar>
-    </div>
-  );
 
   return (
     <nav
