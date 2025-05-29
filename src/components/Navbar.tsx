@@ -279,18 +279,31 @@ const Navbar = () => {
                   </button>
                 </DropdownMenu>
               ) : (
-                <Button
-                  onClick={connectWallet}
-                  variant="outline"
-                  size="sm"
-                  className={`${
-                    theme === 'dark'
-                      ? 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-black'
-                      : 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-white'
-                  }`}
-                >
-                  Connect Wallet
-                </Button>
+                <>
+                  <Button
+                    onClick={connectWallet}
+                    variant="outline"
+                    size="sm"
+                    className={`${
+                      theme === 'dark'
+                        ? 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-black'
+                        : 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-white'
+                    }`}
+                  >
+                    Connect Wallet
+                  </Button>
+
+                  <a
+                    href="https://metamask.app.link/dapp/storage-x-theta.vercel.app/"
+                    className={`${
+                      theme === 'dark'
+                        ? 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-black'
+                        : 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-white'
+                    }`}
+                  >
+                    Open in Metamask App
+                  </a>
+                </>
               )}
 
               <Button
