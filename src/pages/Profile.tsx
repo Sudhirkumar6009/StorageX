@@ -10,6 +10,36 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { useProfile } from '../contexts/ProfileContext';
+import { useNavigate } from 'react-router-dom';
+import { OrbitProgress, Riple } from 'react-loading-indicators';
+
+const AvatarComponent = React.memo(
+  ({ profileImage }: { profileImage: string | null }) => (
+    <div className="relative rounded-full p-2 m-8 bg-[#00BFFF]/10">
+      <Avatar className="w-25 h-25 ring-1 ring-[#00BFFF] ring-offset-2 ring-offset-gray-900">
+        {profileImage ? (
+          <AvatarImage
+            src={profileImage}
+            alt="Profile"
+            className="w-full h-full object-cover rounded-full"
+            onError={(e) => {
+              e.currentTarget.src = '';
+              toast({
+                title: 'Error loading image',
+                description: 'Could not load profile image',
+                variant: 'destructive',
+              });
+            }}
+          />
+        ) : (
+          <AvatarFallback className="bg-gray-800 dark:bg-gray-700">
+            <User className="w-16 h-16 text-[#00BFFF]" />
+          </AvatarFallback>
+        )}
+      </Avatar>
+    </div>
+  )
+);
 
 const Profile = () => {
   const { theme } = useTheme();
@@ -17,10 +47,13 @@ const Profile = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [fetchloading, setFetchLoading] = useState(false);
+  const [savingLoading, setSavingLoading] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [updatedProfile, setUpdatedProfile] = useState<String | null>(null);
   const { updateGlobalProfileImage } = useProfile();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (address) {
@@ -28,7 +61,14 @@ const Profile = () => {
     }
   }, [address]);
 
+  useEffect(() => {
+    if (!isConnected) {
+      navigate('/'); // Redirect to home or login page
+    }
+  }, [isConnected, navigate]);
+
   const fetchProfileData = async () => {
+    setFetchLoading(true);
     try {
       // Validate address before making the request
       if (!address || address.length !== 42 || !address.startsWith('0x')) {
@@ -56,6 +96,7 @@ const Profile = () => {
       } else {
         throw new Error(data.message || 'Failed to load profile');
       }
+      setFetchLoading(false);
     } catch (err: any) {
       console.error('Error fetching profile:', err);
       toast({
@@ -84,6 +125,7 @@ const Profile = () => {
 
   const handleUpdateProfile = async () => {
     setUpdatedProfile('Connecting...');
+    setSavingLoading(true);
     try {
       const res = await fetch('http://localhost:3001/api/profile/update', {
         method: 'POST',
@@ -101,6 +143,7 @@ const Profile = () => {
       const data = await res.json();
 
       if (data.success) {
+        setSavingLoading(false);
         setUpdatedProfile('✅ ' + data.message);
         // Update global profile image
         updateGlobalProfileImage(profileImage);
@@ -168,42 +211,6 @@ const Profile = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleUpdateDetails = () => {
-    console.log('Profile Update Details:');
-    console.log('Name:', name);
-    console.log('Email:', email);
-    console.log('Wallet Address:', address);
-
-    toast({
-      title: 'Profile Updated Successfully!',
-    });
-  };
-  const AvatarComponent = () => (
-    <div className="relative rounded-full p-2 m-8 bg-[#00BFFF]/10">
-      <Avatar className="w-25 h-25 ring-1 ring-[#00BFFF] ring-offset-2 ring-offset-gray-900">
-        {profileImage ? (
-          <AvatarImage
-            src={profileImage}
-            alt="Profile"
-            className="w-full h-full object-cover rounded-full"
-            onError={(e) => {
-              e.currentTarget.src = ''; // Clear broken image
-              toast({
-                title: 'Error loading image',
-                description: 'Could not load profile image',
-                variant: 'destructive',
-              });
-            }}
-          />
-        ) : (
-          <AvatarFallback className="bg-gray-800 dark:bg-gray-700">
-            <User className="w-16 h-16 text-[#00BFFF]" />
-          </AvatarFallback>
-        )}
-      </Avatar>
-    </div>
-  );
-
   if (!isConnected) {
     return (
       <div
@@ -270,7 +277,7 @@ const Profile = () => {
             >
               <CardContent className="text-center">
                 <div className="flex justify-center">
-                  <AvatarComponent />
+                  <AvatarComponent profileImage={profileImage} />
                 </div>
 
                 <div>
@@ -416,6 +423,22 @@ const Profile = () => {
                       },
                     }}
                   />
+
+                  {fetchloading && (
+                    <div
+                      className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-40"
+                      style={{ zIndex: 9999 }}
+                    >
+                      <div className="bg-white dark:bg-[#000] rounded-lg p-6 shadow-lg w-30 ring-[#00BFFF] ring-offset-1">
+                        <Riple
+                          color="#00bfff"
+                          size="medium"
+                          text=""
+                          textColor=""
+                        />
+                      </div>
+                    </div>
+                  )}
                   <TextField
                     id="Email"
                     type="email"
@@ -466,6 +489,16 @@ const Profile = () => {
                     }`}
                   >
                     Save Changes
+                    {savingLoading && (
+                      <OrbitProgress
+                        variant="disc"
+                        color="#00bfff"
+                        size="small"
+                        text=""
+                        dense
+                        textColor=""
+                      />
+                    )}
                   </Button>
                 </div>
               </CardContent>
