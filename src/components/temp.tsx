@@ -17,11 +17,7 @@ const Navbar = () => {
   const handleMongoConnect = async () => {
     setMongoStatus('Connecting...');
     try {
-<<<<<<< HEAD
       const res = await fetch(`${process.env.BACKEND_PORT_URL}/api/mongo/test`);
-=======
-      const res = await fetch('http://localhost:3001/api/mongo/test');
->>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
       const data = await res.json();
 
       if (data.success) {

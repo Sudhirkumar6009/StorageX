@@ -1,11 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
-<<<<<<< HEAD
 require('dotenv').config({ path: './.env' });
-=======
-require('dotenv').config({ path: './config.env' });
->>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
 const { encrypt, decrypt } = require('./cryptoUtils');
 
 const app = express();
@@ -46,11 +42,7 @@ app.get('/api/mongo/test', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-<<<<<<< HEAD
   console.log(`Backend server running on ${process.env.BACKEND_PORT_URL}`);
-=======
-  console.log(`Backend server running on http://localhost:${PORT}`);
->>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
 });
 
 app.post('/api/profile/update', async (req, res) => {

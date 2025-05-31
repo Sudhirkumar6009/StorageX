@@ -8,7 +8,6 @@ git add .
 git remote add origin https://github.com/Sudhirkumar6009/StorageX.git
 git commit -m "Message"
 git push origin main
-<<<<<<< HEAD
 .
 
 Sign up:
@@ -18,6 +17,3 @@ continue with email
 Fields:
 Enter wallet ID
 <dropdown for >
-=======
-.
->>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c

@@ -54,10 +54,7 @@ const Profile = () => {
   const [updatedProfile, setUpdatedProfile] = useState<String | null>(null);
   const { updateGlobalProfileImage } = useProfile();
   const navigate = useNavigate();
-<<<<<<< HEAD
   const backendUrl = import.meta.env.VITE_BACKEND_PORT_URL;
-=======
->>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
 
   useEffect(() => {
     if (address) {
@@ -79,13 +76,7 @@ const Profile = () => {
         throw new Error('Invalid wallet address');
       }
 
-<<<<<<< HEAD
       const res = await fetch(`${backendUrl}/api/profile/show/${address}`);
-=======
-      const res = await fetch(
-        `http://localhost:3001/api/profile/show/${address}`
-      );
->>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -135,11 +126,7 @@ const Profile = () => {
     setUpdatedProfile('Connecting...');
     setSavingLoading(true);
     try {
-<<<<<<< HEAD
       const res = await fetch(`${backendUrl}/api/profile/update`, {
-=======
-      const res = await fetch('http://localhost:3001/api/profile/update', {
->>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -264,11 +251,7 @@ const Profile = () => {
               theme === 'dark' ? 'text-white' : 'text-gray-900'
             }`}
           >
-<<<<<<< HEAD
             {name ? `Welcome, ${name}` : 'My Profile'}
-=======
-            My Profile
->>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
           </h1>
           <p
             className={`mt-2 text-[12px] ${
@@ -495,11 +478,7 @@ const Profile = () => {
                   />
                 </div>
 
-<<<<<<< HEAD
                 <div className="flex pt-4">
-=======
-                <div className="flex space-x-4 pt-4">
->>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
                   <Button
                     onClick={handleUpdateProfile}
                     className={`${
@@ -509,19 +488,6 @@ const Profile = () => {
                     }`}
                   >
                     Save Changes
-<<<<<<< HEAD
-=======
-                    {savingLoading && (
-                      <OrbitProgress
-                        variant="disc"
-                        color="#00bfff"
-                        size="small"
-                        text=""
-                        dense
-                        textColor=""
-                      />
-                    )}
->>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
                   </Button>
                 </div>
               </CardContent>
