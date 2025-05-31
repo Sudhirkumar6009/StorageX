@@ -1,6 +1,10 @@
 const CryptoJS = require('crypto-js');
 
+<<<<<<< HEAD
 require('dotenv').config({ path: './.env' });
+=======
+require('dotenv').config({ path: './config.env' });
+>>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
 
 const SECRET_KEY = process.env.SECRET_KEY;
 

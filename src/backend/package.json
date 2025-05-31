@@ -13,7 +13,10 @@
   "description": "",
   "dependencies": {
     "cors": "^2.8.5",
+<<<<<<< HEAD
     "crypto-js": "^4.2.0",
+=======
+>>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "mongodb": "^6.16.0",

@@ -18,7 +18,10 @@ const Navbar = () => {
   const [mongoStatus, setMongoStatus] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const { globalProfileImage } = useProfile();
+<<<<<<< HEAD
   const backendUrl = import.meta.env.VITE_BACKEND_PORT_URL;
+=======
+>>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
 
   useEffect(() => {
     if (isConnected && address) {
@@ -27,7 +30,13 @@ const Navbar = () => {
   }, [isConnected, address]);
   const fetchProfileData = async () => {
     try {
+<<<<<<< HEAD
       const res = await fetch(`${backendUrl}/api/profile/show/${address}`);
+=======
+      const res = await fetch(
+        `http://localhost:3001/api/profile/show/${address}`
+      );
+>>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
       const data = await res.json();
 
       if (data.success) {
@@ -48,7 +57,11 @@ const Navbar = () => {
   const handleMongoConnect = async () => {
     setMongoStatus('Connecting...');
     try {
+<<<<<<< HEAD
       const res = await fetch(`${backendUrl}/api/mongo/test`);
+=======
+      const res = await fetch('http://localhost:3001/api/mongo/test');
+>>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
       const data = await res.json();
 
       if (data.success) {
@@ -159,6 +172,10 @@ const Navbar = () => {
     );
   };
 
+<<<<<<< HEAD
+=======
+  const handleProfile = () => {};
+>>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -252,6 +269,7 @@ const Navbar = () => {
             <div className="flex items-center space-x-4">
               {isConnected && address ? (
                 <DropdownMenu>
+<<<<<<< HEAD
                   <Link to={`/`}>
                     <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
                       Home
@@ -259,6 +277,13 @@ const Navbar = () => {
                   </Link>
                   <Link to={`/profile`}>
                     <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
+=======
+                  <Link to={`/profile`}>
+                    <button
+                      className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white"
+                      onClick={handleProfile}
+                    >
+>>>>>>> 4f318936bc4036cc549beaaadfa0a624c639d73c
                       Manage Profile
                     </button>
                   </Link>
