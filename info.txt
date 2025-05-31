@@ -1,0 +1,19 @@
+Off-Chain Implementations : 
+Username
+Email
+Password (Contains Option for changing password)
+
+
+git add .
+git remote add origin https://github.com/Sudhirkumar6009/StorageX.git
+git commit -m "Message"
+git push origin main
+.
+
+Sign up:
+Connect Metamask (button)
+Sign in Google (button)
+continue with email
+Fields:
+Enter wallet ID
+<dropdown for >

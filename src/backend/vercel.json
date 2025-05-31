@@ -1,0 +1,15 @@
+{
+  "installCommand": "npm install wagmi",
+  "version": 2,
+  "builds": [
+    {
+      "src": "MongoDB.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "src/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [{ "src": "/(.*)", "dest": "/" }]
+}
