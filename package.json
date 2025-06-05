@@ -2,7 +2,7 @@
   "name": "StorageX",
   "scripts": {
     "build": "cd frontend && npm install && npm run build",
-    "start": "cd backend && npm install && node index.js",
+    "start": "cd backend && npm install && node MongoDB.js",
     "version": "1.0.0",
     "private": true,
     "devDependencies": {
