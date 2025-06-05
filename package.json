@@ -1,13 +1,12 @@
 {
   "name": "StorageX",
-  "version": "1.0.0",
-  "private": true,
   "scripts": {
-    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "frontend": "cd frontend && npm run dev",
-    "backend": "cd backend && nodemon index.js"
-  },
-  "devDependencies": {
-    "concurrently": "^8.0.0"
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd backend && npm install && node index.js",
+    "version": "1.0.0",
+    "private": true,
+    "devDependencies": {
+      "concurrently": "^8.0.0"
+    }
   }
 }
