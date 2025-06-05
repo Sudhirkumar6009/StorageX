@@ -1,0 +1,7 @@
+Address: 0xF3ce35ce0eF60f2FB4B9DAf440A3A185Aa1FC5e4
+
+Private Key: 0x49d582425fcfc0312dae6bef9ab5c9fbfba7349081901508fa14ffed162b1591
+
+Mnemonic Key: joy prepare sing mercy pony club crane post attract build useful retreat
+
+Please store your private and mnemonic key securely. They will not be shown again.
