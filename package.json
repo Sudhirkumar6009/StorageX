@@ -1,0 +1,13 @@
+{
+  "name": "StorageX",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && nodemon index.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  }
+}
