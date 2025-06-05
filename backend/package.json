@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "main": "MongoDB.js",
   "scripts": {
+<<<<<<< HEAD
     "build": "npm install && npm run build",
     "start": "node MongoDB.js",
     "dev": "nodemon MongoDB.js"
+=======
+  "start": "node MongoDB.js",
+  "dev": "nodemon MongoDB.js"
+>>>>>>> 02718d9141ba298cc0a535f36db247646d643230
   },
   "keywords": [],
   "author": "",
