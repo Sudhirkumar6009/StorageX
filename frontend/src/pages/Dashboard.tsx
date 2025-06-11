@@ -43,7 +43,6 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [file, setFile] = useState(null);
   const [cid, setCid] = useState('');
-  const [storedFiles, setStoredFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -336,7 +335,6 @@ const Dashboard = () => {
       // Update UI state
       setFiles((prev) => prev.filter((f) => f.cid !== file.cid));
       setFileList((prev) => prev.filter((f) => f.cid !== file.cid));
-      setStoredFiles((prev) => prev.filter((f) => f.cid !== file.cid));
 
       toast({
         title: 'Success',
@@ -385,20 +383,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!metamaskAddress) return;
-    (async () => {
-      const files = await fetchFileList();
-      setStoredFiles(
-        files.map((f: any, i: number) => ({
-          id: `${i}-${f.cid}`,
-          cid: f.cid,
-          name: f.name || 'Unknown',
-          size: f.size,
-          type: guessFileType(f.name?.split('.').pop() || ''),
-
-          preview: f.preview,
-        }))
-      );
-    })();
+    (async () => {})();
   }, [metamaskAddress]);
 
   const totalSize = fileList

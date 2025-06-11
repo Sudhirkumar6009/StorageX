@@ -1,99 +1,59 @@
 import express from 'express';
-import { MongoClient, ServerApiVersion } from 'mongodb';
 import dotenv from 'dotenv';
-import multer from 'multer';
-import { S3Client } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  ListObjectsV2Command,
+  HeadObjectCommand,
+} from '@aws-sdk/client-s3';
+
+const router = express.Router();
 
 dotenv.config({ path: './.env' });
 
-const router = express.Router();
-const upload = multer();
-const client = new MongoClient(process.env.ATLAS_URI, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
 const s3 = new S3Client({
+  endpoint: `${process.env.FILEBASE_ENDPOINT}`,
   region: 'us-east-1',
-  endpoint: process.env.FILEBASE_ENDPOINT,
   credentials: {
-    accessKeyId: process.env.FILEBASE_ACCESS_KEY,
-    secretAccessKey: process.env.FILEBASE_SECRET_KEY,
+    accessKeyId: `${process.env.FILEBASE_ACCESS_KEY}`,
+    secretAccessKey: `${process.env.FILEBASE_SECRET_KEY}`,
   },
 });
 
-router.post('/api/filebase/list', async (req, res) => {
-  const { metaMask } = req.body;
-  if (!metaMask) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'metaMask required' });
-  }
-
+router.get('/api/filebase/list-cids', async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db('Users');
-    const accounts = db.collection('Accounts');
-    const user = await accounts.findOne({ MetaMask: metaMask });
-    const storage = user?.storage || [];
+    const listCommand = new ListObjectsV2Command({ Bucket: 'storagex' });
+    const listData = await s3.send(listCommand);
+    const files = listData.Contents || [];
 
-    const files = await Promise.all(
-      storage.map(async ({ cid }) => {
-        let size = 'Unknown';
-        let format = 'Unknown';
-        let name = 'unknown';
-
+    // Fetch CID for each file using HeadObject
+    const filesWithCid = await Promise.all(
+      files.map(async (file) => {
         try {
-          const headRes = await axios.head(
-            `https://ipfs.filebase.io/ipfs/${cid}`
-          );
-
-          // File Size
-          const contentLength = headRes.headers['content-length'];
-          if (contentLength) {
-            const kb = Number(contentLength) / 1024;
-            size =
-              kb > 1024
-                ? `${(kb / 1024).toFixed(2)} MB`
-                : `${kb.toFixed(2)} KB`;
-          }
-
-          // File Format
-          const contentType = headRes.headers['content-type'];
-          if (contentType) {
-            const parts = contentType.split('/');
-            format = parts[1] || 'Unknown';
-          }
-
-          // Filename from Content-Disposition
-          const disposition = headRes.headers['content-disposition'];
-          const match = disposition && /filename="(.+?)"/.exec(disposition);
-          if (match) {
-            name = match[1];
-          }
-
-          console.log(`📄 File: ${name}`);
-          console.log(`📦 Size: ${size}`);
-          console.log(`📂 Format: .${format}`);
+          const headCommand = new HeadObjectCommand({
+            Bucket: 'storagex',
+            Key: file.Key,
+          });
+          const headData = await s3.send(headCommand);
+          const cid = headData.Metadata?.cid || null;
+          return {
+            key: file.Key,
+            cid,
+            size: file.Size,
+            lastModified: file.LastModified,
+          };
         } catch (err) {
-          console.warn(
-            `⚠️ Failed to fetch metadata for CID ${cid}: ${err.message}`
-          );
+          return {
+            key: file.Key,
+            cid: null,
+            size: file.Size,
+            lastModified: file.LastModified,
+            error: err.message,
+          };
         }
-
-        return {
-          cid,
-          name,
-          size,
-          format,
-          preview: `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${cid}`,
-        };
       })
     );
 
-    res.json({ success: true, files });
+    res.json({ success: true, files: filesWithCid });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
