@@ -71,6 +71,7 @@ const Login = () => {
         });
         navigate('/dashboard');
       } else {
+        setFetchLoading(false);
         toast({
           title: 'No profile found',
           description: 'No user exists with this wallet address.',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,83 +7,413 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
-import { makingStorageClient } from '../backend/storage/web3Storage.js';
+import CryptoJS from 'crypto-js';
 import { useWeb3 } from '@/contexts/Web3Context';
+import FileBlock from '@/components/FileBlock';
+import FileModal from '@/components/FileModal';
+import { deleteFile } from './DashDemo';
+
+const bucket = 'storagex';
+const fileToDelete = 'IMG-20220803-WA0014.jpg';
+
+interface FileItem {
+  id: string;
+  name: string;
+  cid: string;
+  size: string;
+  type:
+    | 'image'
+    | 'video'
+    | 'pdf'
+    | 'doc'
+    | 'excel'
+    | 'ppt'
+    | 'archive'
+    | 'audio'
+    | 'other';
+  preview?: string;
+}
 
 const Dashboard = () => {
+  const [cids, setCids] = useState<string[]>([]);
+  const [fileList, setFileList] = useState<any[]>([]);
+  const [error, setError] = useState('');
+  const [profile, setProfile] = useState<{ address: string } | null>(null);
   const { theme } = useTheme();
   const { user } = useAuth();
+  const [file, setFile] = useState(null);
+  const [cid, setCid] = useState('');
+  const [storedFiles, setStoredFiles] = useState<FileItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { address: metamaskAddress, isConnected } = useWeb3();
+  const [fileName, setFileName] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [previewType, setPreviewType] = useState<
+    | 'image'
+    | 'video'
+    | 'pdf'
+    | 'doc'
+    | 'excel'
+    | 'ppt'
+    | 'archive'
+    | 'audio'
+    | 'other'
+    | null
+  >(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [allCids, setAllCids] = useState<{ name: string; cid: string }[]>([]);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [fileToRemove, setFileToRemove] = useState<FileItem | null>(null);
+  const [result, setResult] = useState(null);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 
-    // Check file size (limit to 10MB for demo)
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: 'File too large',
-        description: 'Please select a file smaller than 10MB',
-        variant: 'destructive',
+  useEffect(() => {
+    if (metamaskAddress) {
+      fetchProfile(metamaskAddress);
+      fetchCids();
+    }
+  }, [metamaskAddress]);
+
+  useEffect(() => {
+    if (metamaskAddress && cids.length > 0) {
+      fetchFilebaseList();
+    }
+  }, [metamaskAddress, cids.join(',')]);
+
+  const fetchCids = async () => {
+    setError('');
+    setCids([]);
+    try {
+      const res = await fetch('http://localhost:3001/api/fetch_cids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ MetaMask: metamaskAddress }),
       });
+      const data = await res.json();
+      if (data.success) {
+        setCids(data.cids);
+      } else {
+        setError(data.message || 'No CIDs found');
+      }
+    } catch (err) {
+      setError('Error fetching CIDs');
+    }
+  };
+
+  const fetchProfile = async (address: string) => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/profile/show/${address}`
+      );
+      const data = await res.json();
+      if (data.success && data.data) {
+        setProfile({ address: data.data.address || address });
+      } else {
+        setProfile(null);
+      }
+    } catch {
+      setProfile(null);
+    }
+  };
+
+  const fetchFilebaseList = async () => {
+    setError('');
+    if (!metamaskAddress) {
+      setError('Connect your wallet first.');
       return;
     }
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
+    await fetchProfile(metamaskAddress);
     try {
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          const newProgress = prev + 10;
-          if (newProgress >= 90) {
-            clearInterval(progressInterval);
-          }
-          return Math.min(newProgress, 90);
-        });
-      }, 200);
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      toast({
-        title: 'File uploaded successfully',
-        description: `${file.name} has been stored on IPFS`,
-      });
-
-      // Reset file input
-      e.target.value = '';
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast({
-        title: 'Upload failed',
-        description: 'Failed to upload file to IPFS',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-      setTimeout(() => setUploadProgress(0), 1000);
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/list-cids`
+      );
+      const data = await res.json();
+      if (data.success) {
+        setFileList(data.files);
+      } else {
+        setError(data.error || 'Unknown error');
+      }
+    } catch (err) {
+      setError((err as Error).message);
     }
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  const canShowFiles =
+    profile && metamaskAddress && profile.address?.trim() === metamaskAddress;
+
+  const handleFileChange = (event) => {
+    const selected = event.target.files[0];
+    if (selected) {
+      if (selected.size > MAX_FILE_SIZE) {
+        alert('File size should not be greater than 200MB');
+        return;
+      }
+      setFile(selected);
+      setFileName(selected.name); // Store the file name
+    }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: 'Copied to clipboard',
-      description: 'IPFS hash has been copied',
-    });
+  const uploadFile = async () => {
+    if (!file || !metamaskAddress) {
+      alert('Please select a file and connect wallet first');
+      return;
+    }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('metaMask', metamaskAddress);
+
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: 'Upload successful', description: file.key });
+        console.log('Actual File Name:', file.key);
+        setFile(null);
+        setFileName('');
+        fetchFiles();
+      } else {
+        alert('Upload failed: ' + (data.error || 'Unknown error'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  // Fetch list of CIDs and metadata from your backend
+  const fetchFileList = async () => {
+    try {
+      const res = await fetch('http://localhost:3001/api/filebase/list', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ metaMask: metamaskAddress }),
+      });
+
+      const data = await res.json();
+      if (data.success && Array.isArray(data.files)) {
+        return data.files;
+      } else {
+        console.error('Failed to fetch file list:', data.message || data.error);
+        return [];
+      }
+    } catch (err) {
+      console.error('Error fetching file list:', err);
+      return [];
+    }
   };
 
+  // Utility function to guess file type based on extension
+  const guessFileType = (ext: string) => {
+    if (!ext) return 'other';
+    const map: Record<string, FileItem['type']> = {
+      jpg: 'image',
+      jpeg: 'image',
+      png: 'image',
+      gif: 'image',
+      mp4: 'video',
+      mp3: 'audio',
+      pdf: 'pdf',
+      doc: 'doc',
+      docx: 'doc',
+      xls: 'excel',
+      xlsx: 'excel',
+      ppt: 'ppt',
+      pptx: 'ppt',
+      zip: 'archive',
+      rar: 'archive',
+    };
+    return map[ext.toLowerCase()] || 'other';
+  };
+
+  const getFileType = (name: string) => {
+    const ext = name.split('.').pop()?.toLowerCase();
+    if (!ext) return 'other';
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext))
+      return 'image';
+    if (['mp4', 'mov', 'avi', 'webm'].includes(ext)) return 'video';
+    if (['pdf'].includes(ext)) return 'pdf';
+    if (['doc', 'docx'].includes(ext)) return 'doc';
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return 'excel';
+    if (['ppt', 'pptx'].includes(ext)) return 'ppt';
+    if (['zip', 'rar', 'tar', 'gz', '7z'].includes(ext)) return 'archive';
+    if (['mp3', 'wav', 'ogg'].includes(ext)) return 'audio';
+    return 'other';
+  };
+
+  const removeFile = async () => {
+    try {
+      await deleteFile(bucket, fileToDelete);
+      console.log(`File ${fileToDelete} removed successfully.`);
+    } catch (error) {
+      console.error(`Error removing file ${fileToDelete}:`, error);
+    }
+  };
+  const fetchFileSize = async (cid: string): Promise<string> => {
+    try {
+      const res = await fetch(
+        `https://gateway.lighthouse.storage/ipfs/${cid}`,
+        { method: 'HEAD' }
+      );
+      const size = res.headers.get('content-length');
+      if (size) {
+        const kb = Number(size) / 1024;
+        return kb > 1024
+          ? `${(kb / 1024).toFixed(2)} MB`
+          : `${kb.toFixed(2)} KB`;
+      }
+    } catch {}
+    return 'Unknown';
+  };
+
+  const [files, setFiles] = useState<FileItem[]>([]);
+  useEffect(() => {
+    const buildFiles = async () => {
+      if (!allCids) return;
+      const filesWithSize = await Promise.all(
+        allCids.map(async ({ name, cid }, idx) => {
+          const size = await fetchFileSize(cid); // Always fetch from Lighthouse
+          return {
+            id: `${cid}-${idx}`,
+            name,
+            cid,
+            size,
+            type: getFileType(name) as FileItem['type'],
+            preview:
+              getFileType(name) === 'image'
+                ? `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${cid}?w=164&h=164&fit=crop&auto=format`
+                : undefined,
+          };
+        })
+      );
+      setFiles(filesWithSize);
+    };
+    buildFiles();
+  }, [allCids]);
+
+  const handleView = (file: FileItem) => {
+    setSelectedFile(file);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedFile(null);
+  };
+
+  const handleRemoveFile = async (file: any) => {
+    console.log('handleRemoveFile called with:', file);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/delete`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            metaMask: metamaskAddress,
+            cid: file.cid,
+            fileName: file.key, // <-- Use file.key here!
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to remove file');
+      }
+
+      // Update UI state
+      setFiles((prev) => prev.filter((f) => f.cid !== file.cid));
+      setFileList((prev) => prev.filter((f) => f.cid !== file.cid));
+      setStoredFiles((prev) => prev.filter((f) => f.cid !== file.cid));
+
+      toast({
+        title: 'Success',
+        description: 'File removed successfully',
+      });
+    } catch (err) {
+      console.error('Remove error:', err);
+      toast({
+        title: 'Error',
+        description: err.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const fetchFiles = async () => {
+    if (!metamaskAddress) return;
+    const res = await fetch(
+      `${
+        import.meta.env.VITE_BACKEND_PORT_URL || 'http://localhost:3001'
+      }/api/filebase/list`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ metaMask: metamaskAddress }),
+      }
+    );
+    const data = await res.json();
+    if (data.success) {
+      setFiles(
+        data.files.map((f, idx) => ({
+          id: `${f.cid}-${idx}`,
+          cid: f.cid,
+          name: f.name,
+          size: f.size,
+          type: getFileType(f.name || ''),
+          preview:
+            getFileType(f.name || '') === 'image' ? f.preview : undefined,
+        }))
+      );
+    }
+  };
+  useEffect(() => {
+    fetchFiles();
+  }, [metamaskAddress]);
+
+  useEffect(() => {
+    if (!metamaskAddress) return;
+    (async () => {
+      const files = await fetchFileList();
+      setStoredFiles(
+        files.map((f: any, i: number) => ({
+          id: `${i}-${f.cid}`,
+          cid: f.cid,
+          name: f.name || 'Unknown',
+          size: f.size,
+          type: guessFileType(f.name?.split('.').pop() || ''),
+
+          preview: f.preview,
+        }))
+      );
+    })();
+  }, [metamaskAddress]);
+
+  const totalSize = fileList
+    .filter((file) => cids.includes(file.cid))
+    .reduce((sum, file) => sum + (Number(file.size) || 0), 0);
+
+  // Format size for display
+  const formatSize = (size: number) => {
+    if (size > 1024 * 1024) {
+      return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+    } else if (size > 1024) {
+      return `${(size / 1024).toFixed(2)} KB`;
+    }
+    return `${size} B`;
+  };
   return (
     <div
       className={`min-h-screen transition-colors duration-200 ${
@@ -137,51 +467,50 @@ const Dashboard = () => {
                   >
                     Select File
                   </Label>
-                  <Input
-                    id="file-upload"
-                    type="file"
-                    onChange={handleFileUpload}
-                    disabled={isUploading}
-                    className={`mt-1 ${
-                      theme === 'dark'
-                        ? 'bg-gray-800 border-gray-700 text-white'
-                        : 'bg-white border-gray-300'
-                    }`}
-                  />
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input
+                      id="file-upload"
+                      type="file"
+                      onChange={handleFileChange}
+                      disabled={isUploading}
+                      className={`flex-1 ${
+                        theme === 'dark'
+                          ? 'bg-gray-800 border-gray-700 text-white'
+                          : 'bg-white border-gray-300'
+                      }`}
+                      style={{ minWidth: 0 }}
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={uploadFile}
+                      disabled={loading || !isConnected}
+                      className={`h-10 px-4 py-2 ${
+                        theme === 'dark'
+                          ? 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-black'
+                          : 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-white'
+                      }`}
+                    >
+                      {loading ? 'Uploading...' : 'Upload'}
+                    </Button>
+                  </div>
                   <p
                     className={`text-sm mt-1 ${
                       theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                     }`}
                   >
-                    Maximum file size: 10MB
+                    Maximum file size: 200MB
                   </p>
                 </div>
-
-                {isUploading && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span
-                        className={
-                          theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                        }
-                      >
-                        Uploading to IPFS...
-                      </span>
-                      <span
-                        className={
-                          theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                        }
-                      >
-                        {uploadProgress}%
-                      </span>
-                    </div>
-                    <Progress value={uploadProgress} className="w-full" />
+                {error && <div style={{ color: 'red' }}>Error: {error}</div>}
+                {!canShowFiles && (
+                  <div style={{ color: 'orange', marginTop: 10 }}>
+                    Connect your wallet to view your files.
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Uploaded Files */}
             <Card
               className={`mt-6 ${
                 theme === 'dark'
@@ -195,10 +524,12 @@ const Dashboard = () => {
                     theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
                   }`}
                 >
-                  Your Files:
+                  Preview File
                 </CardTitle>
               </CardHeader>
-              <CardContent></CardContent>
+              <CardContent>
+                <p>Preview selected file</p>
+              </CardContent>
             </Card>
           </div>
 
@@ -227,45 +558,18 @@ const Dashboard = () => {
                       theme === 'dark' ? 'text-white' : 'text-gray-900'
                     }
                   >
-                    Email
+                    MetaMask Address
                   </Label>
                   <p
+                    style={{ letterSpacing: '0.1rem' }}
                     className={`text-sm ${
                       theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                     }`}
                   >
-                    {user?.email}
+                    {metamaskAddress.slice(0, 10)}...
+                    {metamaskAddress.slice(-4)}
                   </p>
                 </div>
-
-                {/* <div>
-                  <Label className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>
-                    Wallet Status
-                  </Label>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${
-                      isConnected ? 'bg-green-500' : 'bg-red-500'
-                    }`} />
-                    <p className={`text-sm ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>
-                      {isConnected ? 'Connected' : 'Disconnected'}
-                    </p>
-                  </div>
-                </div>
-
-                {isConnected && account && (
-                  <div>
-                    <Label className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>
-                      Wallet Address
-                    </Label>
-                    <p className={`text-xs font-mono ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>
-                      {account.slice(0, 6)}...{account.slice(-4)}
-                    </p>
-                  </div>
-                )} */}
 
                 <div>
                   <Label
@@ -273,14 +577,14 @@ const Dashboard = () => {
                       theme === 'dark' ? 'text-white' : 'text-gray-900'
                     }
                   >
-                    Files Stored
+                    Files Stored : {files.length}
                   </Label>
                   <p
                     className={`text-2xl font-bold ${
                       theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
                     }`}
                   >
-                    Upload Length
+                    Uploaded Size : {formatSize(totalSize)}
                   </p>
                 </div>
               </CardContent>
@@ -324,6 +628,99 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>All Your {files.length} Files</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {fileList.length === 0 ? (
+              <div>No files uploaded yet.</div>
+            ) : (
+              <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
+                {fileList
+                  .filter((file) => cids.includes(file.cid))
+                  .map((file, idx) => {
+                    const fileType = getFileType(file.key); // Use your existing getFileType function
+                    return (
+                      <FileBlock
+                        key={file.key}
+                        id={String(idx)}
+                        name={file.key}
+                        size={
+                          file.size
+                            ? `${(file.size / 1024).toFixed(2)} KB`
+                            : 'N/A'
+                        }
+                        type={fileType} // Pass the actual file type instead of null
+                        onView={() => handleView(file)}
+                        thumbnail={`https://cooperative-salmon-galliform.myfilebase.com/ipfs/${file.cid}`}
+                        onDelete={() => {
+                          setFileToRemove(file);
+                          setShowRemoveConfirm(true);
+                        }}
+                      />
+                    );
+                  })}
+              </div>
+            )}
+            {/* File preview modal */}
+            <FileModal
+              isOpen={isModalOpen}
+              onClose={handleCloseModal}
+              file={selectedFile}
+            />
+          </CardContent>
+        </Card>
+        <div>
+          {result && (
+            <div
+              style={{
+                marginTop: '20px',
+                color: result.success ? 'green' : 'red',
+              }}
+            >
+              {result.success ? (
+                <p>✅ Success: {result.message}</p>
+              ) : (
+                <p>❌ Error: {result.message}</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {showRemoveConfirm && fileToRemove && (
+          <div
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-40"
+            style={{ zIndex: 9999 }}
+          >
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg w-80">
+              <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
+                Are you sure?
+              </h2>
+              <p className="mb-6 text-gray-600 dark:text-gray-300">
+                Do you really want to remove this file?
+              </p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowRemoveConfirm(false)}
+                  className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowRemoveConfirm(false);
+                    await handleRemoveFile(fileToRemove);
+                  }}
+                  className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

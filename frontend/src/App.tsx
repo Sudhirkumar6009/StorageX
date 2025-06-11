@@ -12,13 +12,14 @@ import Index from './pages/Index';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './contexts/ProtectedRoute';
 import NotFound from './pages/NotFound';
 import { Web3Provider } from './contexts/Web3Context';
 import { WagmiProvider, createConfig, http } from 'wagmi';
 import { mainnet, sepolia } from 'wagmi/chains';
 import { BackTopContext } from './contexts/BackTopContext.js';
+// import DashDemo from './pages/DashDemo';
+import Dashboard from './pages/Dashboard';
 
 const queryClient = new QueryClient();
 const wagmiConfig = createConfig({

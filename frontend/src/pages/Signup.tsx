@@ -10,6 +10,8 @@ import { toast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import Tooltip from '@mui/material/Tooltip';
 import { useWeb3 } from '../contexts/Web3Context';
+import { OrbitProgress, Riple } from 'react-loading-indicators';
+
 import {
   createCustomWallet,
   storePublicAddress,
@@ -21,6 +23,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const { address, isConnected, connectWallet, disconnectWallet } = useWeb3();
   const [walletInfo, setWalletInfo] = useState(null);
+  const [loadingCreation, setLoadingCreation] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
   });
@@ -58,6 +61,8 @@ const Signup = () => {
       sendToast();
       return;
     }
+
+    setLoadingCreation(true); // Set loading at the start
 
     try {
       const wallet = createCustomWallet();
@@ -110,6 +115,8 @@ const Signup = () => {
         variant: 'destructive',
         duration: 3000,
       });
+    } finally {
+      setLoadingCreation(false); // Always stop loading at the end
     }
   };
 
@@ -287,7 +294,7 @@ const Signup = () => {
               <Button
                 type="button"
                 onClick={isConnected ? handleCreateWallet : sendToast}
-                disabled={isLoading || !isConnected}
+                disabled={isLoading || !isConnected || loadingCreation}
                 variant="outline"
                 style={{
                   marginTop: '3rem',
@@ -347,6 +354,16 @@ const Signup = () => {
             Please store your private and mnemonic key securely. They will not
             be shown again.
           </p>
+        </div>
+      )}
+      {loadingCreation && (
+        <div
+          className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-40"
+          style={{ zIndex: 9999 }}
+        >
+          <div className="bg-white dark:bg-[#000] rounded-lg p-6 shadow-lg w-30 ring-[#00BFFF] ring-offset-1">
+            <Riple color="#00bfff" size="medium" text="" textColor="" />
+          </div>
         </div>
       )}
     </div>

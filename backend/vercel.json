@@ -3,7 +3,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "MongoDB.js",
+      "src": "server.js",
       "use": "@vercel/node"
     },
     {
