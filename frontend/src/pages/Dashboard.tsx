@@ -250,29 +250,10 @@ const Dashboard = () => {
     return 'other';
   };
 
-  const removeFile = async () => {
-    try {
-      await deleteFile(bucket, fileToDelete);
-      console.log(`File ${fileToDelete} removed successfully.`);
-    } catch (error) {
-      console.error(`Error removing file ${fileToDelete}:`, error);
-    }
-  };
-  const fetchFileSize = async (cid: string): Promise<string> => {
-    try {
-      const res = await fetch(
-        `https://gateway.lighthouse.storage/ipfs/${cid}`,
-        { method: 'HEAD' }
-      );
-      const size = res.headers.get('content-length');
-      if (size) {
-        const kb = Number(size) / 1024;
-        return kb > 1024
-          ? `${(kb / 1024).toFixed(2)} MB`
-          : `${kb.toFixed(2)} KB`;
-      }
-    } catch {}
-    return 'Unknown';
+  const fetchFileSize = (size: number | string) => {
+    const kb = Number(size) / 1024;
+    if (isNaN(kb)) return 'Unknown';
+    return kb > 1024 ? `${(kb / 1024).toFixed(2)} MB` : `${kb.toFixed(2)} KB`;
   };
 
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -281,7 +262,7 @@ const Dashboard = () => {
       if (!allCids) return;
       const filesWithSize = await Promise.all(
         allCids.map(async ({ name, cid }, idx) => {
-          const size = await fetchFileSize(cid); // Always fetch from Lighthouse
+          const size = await fetchFileSize(cid);
           return {
             id: `${cid}-${idx}`,
             name,
