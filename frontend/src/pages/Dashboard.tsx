@@ -562,7 +562,8 @@ const Dashboard = () => {
                       theme === 'dark' ? 'text-white' : 'text-gray-900'
                     }
                   >
-                    Files Stored : {files.length}
+                    File Stored :{' '}
+                    {fileList.filter((file) => cids.includes(file.cid)).length}{' '}
                   </Label>
                   <p
                     className={`text-2xl font-bold ${
@@ -616,7 +617,10 @@ const Dashboard = () => {
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>All Your {files.length} Files</CardTitle>
+            <CardTitle>
+              All Your{' '}
+              {fileList.filter((file) => cids.includes(file.cid)).length} Files
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {fileList.length === 0 ? (
