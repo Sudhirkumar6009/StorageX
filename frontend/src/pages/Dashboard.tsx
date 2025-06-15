@@ -87,7 +87,7 @@ const Dashboard = () => {
     setError('');
     setCids([]);
     try {
-      const res = await fetch('http://localhost:3001/api/fetch_cids', {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetch_cids`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ MetaMask: metamaskAddress }),

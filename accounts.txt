@@ -19,7 +19,3 @@ JWT token : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQ
 
 nft3.storage : 
 API key : 0202f3d2.e84a16afce8c4ebd8e20907242571d18
-
-
-lighthouse.storage :
-API : d174dc01.ce54de5714064543966e569cef2e9556
