@@ -45,7 +45,7 @@ router.post('/api/store-address', async (req, res) => {
       MetaMask,
       public: publicData, // always store public key
       updatedAt: new Date(),
-      storage: {},
+      storage: [],
     };
 
     const result = await addressesCollection.insertOne(newDoc);
