@@ -87,11 +87,14 @@ const Dashboard = () => {
     setError('');
     setCids([]);
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetch_cids`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ MetaMask: metamaskAddress }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetch_cids`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ MetaMask: metamaskAddress }),
+        }
+      );
       const data = await res.json();
       if (data.success) {
         setCids(data.cids);
@@ -128,7 +131,9 @@ const Dashboard = () => {
     await fetchProfile(metamaskAddress);
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/list-cids`
+        `${
+          import.meta.env.VITE_BACKEND_PORT_URL
+        }/api/filebase/list-cids?ts=${Date.now()}`
       );
       const data = await res.json();
       if (data.success) {
@@ -180,7 +185,7 @@ const Dashboard = () => {
         console.log('Actual File Name:', file.key);
         setFile(null);
         setFileName('');
-        fetchFiles();
+        await fetchFilebaseList();
       } else {
         alert('Upload failed: ' + (data.error || 'Unknown error'));
       }

@@ -17,6 +17,7 @@ router.post('/api/store-address', async (req, res) => {
   try {
     await client.connect();
 
+    const { email, MetaMask, public: publicData } = req.body;
     const db = client.db('Users');
     const addressesCollection = db.collection('Accounts');
 
@@ -49,7 +50,11 @@ router.post('/api/store-address', async (req, res) => {
 
     const result = await addressesCollection.insertOne(newDoc);
 
-    res.json({ success: true, data: result });
+    res.json({
+      success: true,
+      data: result,
+      message: 'Address stored successfully',
+    });
   } catch (error) {
     console.error('Store Address Error:', error);
     res.status(500).json({ success: false, error: error.message });
