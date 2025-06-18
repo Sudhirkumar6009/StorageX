@@ -2,7 +2,6 @@ import express from 'express';
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import dotenv from 'dotenv';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
-
 dotenv.config({ path: './.env' });
 
 const router = express.Router();
