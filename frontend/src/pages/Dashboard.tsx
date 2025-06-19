@@ -193,52 +193,6 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-  // Fetch list of CIDs and metadata from your backend
-  const fetchFileList = async () => {
-    try {
-      const res = await fetch('http://localhost:3001/api/filebase/list', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ metaMask: metamaskAddress }),
-      });
-
-      const data = await res.json();
-      if (data.success && Array.isArray(data.files)) {
-        return data.files;
-      } else {
-        console.error('Failed to fetch file list:', data.message || data.error);
-        return [];
-      }
-    } catch (err) {
-      console.error('Error fetching file list:', err);
-      return [];
-    }
-  };
-
-  // Utility function to guess file type based on extension
-  const guessFileType = (ext: string) => {
-    if (!ext) return 'other';
-    const map: Record<string, FileItem['type']> = {
-      jpg: 'image',
-      jpeg: 'image',
-      png: 'image',
-      gif: 'image',
-      mp4: 'video',
-      mp3: 'audio',
-      pdf: 'pdf',
-      doc: 'doc',
-      docx: 'doc',
-      xls: 'excel',
-      xlsx: 'excel',
-      ppt: 'ppt',
-      pptx: 'ppt',
-      zip: 'archive',
-      rar: 'archive',
-    };
-    return map[ext.toLowerCase()] || 'other';
-  };
 
   const getFileType = (name: string) => {
     const ext = name.split('.').pop()?.toLowerCase();
@@ -335,37 +289,6 @@ const Dashboard = () => {
       });
     }
   };
-
-  const fetchFiles = async () => {
-    if (!metamaskAddress) return;
-    const res = await fetch(
-      `${
-        import.meta.env.VITE_BACKEND_PORT_URL || 'http://localhost:3001'
-      }/api/filebase/list`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ metaMask: metamaskAddress }),
-      }
-    );
-    const data = await res.json();
-    if (data.success) {
-      setFiles(
-        data.files.map((f, idx) => ({
-          id: `${f.cid}-${idx}`,
-          cid: f.cid,
-          name: f.name,
-          size: f.size,
-          type: getFileType(f.name || ''),
-          preview:
-            getFileType(f.name || '') === 'image' ? f.preview : undefined,
-        }))
-      );
-    }
-  };
-  useEffect(() => {
-    fetchFiles();
-  }, [metamaskAddress]);
 
   useEffect(() => {
     if (!metamaskAddress) return;
