@@ -13,12 +13,14 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import { ethers } from 'ethers';
 import axios from 'axios';
+import { useGoogleLogin } from '@react-oauth/google';
 import { Riple } from 'react-loading-indicators';
 
 const Login = () => {
   const { theme } = useTheme();
   const { address, isConnected, connectWallet, disconnectWallet } = useWeb3();
   const navigate = useNavigate();
+    const { login, isAuthenticated } = useAuth();
   const [fetchloading, setFetchLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -27,6 +29,43 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [seedPhrase, setSeedPhrase] = useState('');
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfoResponse = await fetch(
+          'https://www.googleapis.com/oauth2/v3/userinfo',
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        );
+  
+        const userInfo = await userInfoResponse.json();
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_PORT_URL}/api/googleAccount`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: userInfo.email }),
+        });
+  
+        const data = await res.json();
+        if (data.success) {
+          await login(userInfo.email, 'google');
+          navigate('/dashboard');
+        } else {
+          alert('Account creation failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error fetching Google user info:', error);
+      }
+    },
+    onError: (error) => {
+      console.error('Login Failed:', error);
+    },
+  });
 
   const handleLogin = async () => {
     try {
@@ -259,6 +298,26 @@ const Login = () => {
                   </Avatar>
                 </Button>
               </div>
+              <div>
+                              <Button
+                                variant="outline"
+                                style={{
+                                  fontSize: '1rem',
+                                  fontWeight: '600',
+                                  height: '50px',
+                                }}
+                                className={`w-full text-lg px-8 py-2 ${
+                                  theme === 'dark'
+                                    ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
+                                    : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
+                                } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={() => {googleLogin()}}
+                                type="button"
+                              >
+                                <svg className="mr-1 w-5 h-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
+                                Continue with Google
+                              </Button>
+                            </div>
               <Button
                 type="button"
                 onClick={handleLogin}

@@ -292,7 +292,7 @@ const Signup = () => {
                   </Avatar>
                 </Button>
               </div>
-                            <div>
+              <div>
                 <Button
                   variant="outline"
                   style={{
