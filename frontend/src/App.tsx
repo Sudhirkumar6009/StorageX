@@ -18,65 +18,87 @@ import { Web3Provider } from './contexts/Web3Context';
 import { WagmiProvider, createConfig, http } from 'wagmi';
 import { mainnet, sepolia } from 'wagmi/chains';
 import { BackTopContext } from './contexts/BackTopContext.js';
-// import DashDemo from './pages/DashDemo';
 import Dashboard from './pages/Dashboard';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { ModalProvider, useModal, DisconnectConfirmModal } from './components/helperComponents/ConfirmationModal';
 
 const queryClient = new QueryClient();
 const wagmiConfig = createConfig({
-  chains: [mainnet, sepolia], // add your chains here
+  chains: [mainnet, sepolia],
   transports: {
     [mainnet.id]: http(),
     [sepolia.id]: http(),
   },
 });
+
+// Global modal component
+const GlobalModals = () => {
+  const { showDisconnect, closeDisconnect, onConfirmDisconnect } = useModal();
+  return (
+    <DisconnectConfirmModal
+      open={showDisconnect}
+      onCancel={closeDisconnect}
+      onConfirm={() => {
+        closeDisconnect();
+        onConfirmDisconnect();
+      }}
+    />
+  );
+};
+
 const App = () => (
-  <BrowserRouter>
-    <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={wagmiConfig}>
-        <TooltipProvider>
-          <ThemeProvider>
-            <ProfileProvider>
-              <Web3Provider>
+  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={wagmiConfig}>
+          <TooltipProvider>
+            <ThemeProvider>
+              <ProfileProvider>
                 <AuthProvider>
-                  <Toaster />
-                  <Sonner />
-                  <div className="min-h-screen flex flex-col">
-                    <Navbar />
-                    <main className="flex-1 pt-16">
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<Signup />} />
-                        <Route
-                          path="/dashboard"
-                          element={
-                            <ProtectedRoute>
-                              <Dashboard />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/profile"
-                          element={
-                            <ProtectedRoute>
-                              <Profile />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </main>
-                    <Footer />
-                    <BackTopContext />
-                  </div>
+                  <ModalProvider>
+                    <GlobalModals />
+                    <Web3Provider>
+                      <Toaster />
+                      <Sonner />
+                      <div className="min-h-screen flex flex-col">
+                        <Navbar />
+                        <main className="flex-1 pt-16">
+                          <Routes>
+                            <Route path="/" element={<Index />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/signup" element={<Signup />} />
+                            <Route
+                              path="/dashboard"
+                              element={
+                                <ProtectedRoute>
+                                  <Dashboard />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/profile"
+                              element={
+                                <ProtectedRoute>
+                                  <Profile />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </main>
+                        <Footer />
+                        <BackTopContext />
+                      </div>
+                    </Web3Provider>
+                  </ModalProvider>
                 </AuthProvider>
-              </Web3Provider>
-            </ProfileProvider>
-          </ThemeProvider>
-        </TooltipProvider>
-      </WagmiProvider>
-    </QueryClientProvider>
-  </BrowserRouter>
+              </ProfileProvider>
+            </ThemeProvider>
+          </TooltipProvider>
+        </WagmiProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  </GoogleOAuthProvider>
 );
 
 export default App;

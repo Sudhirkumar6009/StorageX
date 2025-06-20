@@ -40,7 +40,7 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [profile, setProfile] = useState<{ address: string } | null>(null);
   const { theme } = useTheme();
-  const { user } = useAuth();
+  const { isAuthenticated, authenticationType, user } = useAuth();
   const [file, setFile] = useState(null);
   const [cid, setCid] = useState('');
   const [loading, setLoading] = useState(false);
@@ -71,35 +71,47 @@ const Dashboard = () => {
   const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 
   useEffect(() => {
-    if (metamaskAddress) {
+    if (isAuthenticated) {
       fetchProfile(metamaskAddress);
       fetchCids();
     }
-  }, [metamaskAddress]);
+  }, [isAuthenticated, metamaskAddress]);
 
   useEffect(() => {
-    if (metamaskAddress && cids.length > 0) {
+    if (isAuthenticated && cids.length > 0) {
       fetchFilebaseList();
     }
-  }, [metamaskAddress, cids.join(',')]);
+  }, [isAuthenticated, metamaskAddress, cids.join(',')]);
 
   const fetchCids = async () => {
     setError('');
     setCids([]);
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetch_cids`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ MetaMask: metamaskAddress }),
-        }
-      );
+      let res;
+      if (authenticationType === 'metamask') {
+        res = await fetch(
+          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetch_cids`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ MetaMask: metamaskAddress }),
+          }
+        );
+      } else if (authenticationType === 'google') {
+        res = await fetch(
+          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/google/fetch_cids`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: user?.email }),
+          }
+        );
+      }
       const data = await res.json();
       if (data.success) {
         setCids(data.cids);
       } else {
-        setError(data.message || 'No CIDs found');
+        setError("Something went wrong");
       }
     } catch (err) {
       setError('Error fetching CIDs');
@@ -124,8 +136,8 @@ const Dashboard = () => {
 
   const fetchFilebaseList = async () => {
     setError('');
-    if (!metamaskAddress) {
-      setError('Connect your wallet first.');
+    if (!isAuthenticated) {
+      setError('Authentication required to view your files');
       return;
     }
     await fetchProfile(metamaskAddress);
@@ -162,27 +174,42 @@ const Dashboard = () => {
   };
 
   const uploadFile = async () => {
-    if (!file || !metamaskAddress) {
-      alert('Please select a file and connect wallet first');
+    if (!file) {
+      alert('Please select a file to upload');
+      return;
+    } else if (!isAuthenticated) {
+      alert('User Authentication failed');
       return;
     }
     setLoading(true);
+    const formData = new FormData();
+    let res;
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('metaMask', metamaskAddress);
-
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
+      if (authenticationType === 'metamask') {
+        formData.append('file', file);
+        formData.append('metaMask', metamaskAddress);
+        res = await fetch(
+          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/upload`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+      } else if (authenticationType === 'google') {
+        formData.append('file', file);
+        formData.append('email', user?.email || '');
+        res = await fetch(
+          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/google/upload`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+      }
       const data = await res.json();
       if (data.success) {
         toast({ title: 'Upload successful', description: file.key });
-        console.log('Actual File Name:', file.key);
+        console.log('Actual File Name:', file.name);
         setFile(null);
         setFileName('');
         await fetchFilebaseList();
@@ -253,22 +280,38 @@ const Dashboard = () => {
   const handleRemoveFile = async (file: any) => {
     console.log('handleRemoveFile called with:', file);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/delete`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            metaMask: metamaskAddress,
-            cid: file.cid,
-            fileName: file.key, // <-- Use file.key here!
-          }),
-        }
-      );
+      let res;
+      if (authenticationType === 'metamask') {
+        res = await fetch(
+          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/delete`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              metaMask: metamaskAddress,
+              cid: file.cid,
+              fileName: file.key,
+            }),
+          }
+        );
+      } else if (authenticationType === 'google') {
+       res = await fetch(
+          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/google/delete`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: user?.email,
+              cid: file.cid,
+              fileName: file.key,
+            }),
+          }
+        ); 
+      }
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok) {
+      if (!res.ok) {
         throw new Error(data.message || 'Failed to remove file');
       }
 
@@ -397,9 +440,9 @@ const Dashboard = () => {
                   </p>
                 </div>
                 {error && <div style={{ color: 'red' }}>Error: {error}</div>}
-                {!canShowFiles && (
+                {!isAuthenticated && (
                   <div style={{ color: 'orange', marginTop: 10 }}>
-                    Connect your wallet to view your files.
+                    Authentication Failure
                   </div>
                 )}
               </CardContent>
@@ -460,8 +503,8 @@ const Dashboard = () => {
                       theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                     }`}
                   >
-                    {metamaskAddress.slice(0, 10)}...
-                    {metamaskAddress.slice(-4)}
+                    {authenticationType === 'metamask' ? `${metamaskAddress.slice(0, 6)}...${metamaskAddress.slice(-4)}` : user?.email}
+
                   </p>
                 </div>
 

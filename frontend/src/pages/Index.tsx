@@ -70,7 +70,7 @@ const Index = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {isConnected ? (
+            {isAuthenticated ? (
               <Link to="/dashboard">
                 <Button
                   size="lg"

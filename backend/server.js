@@ -9,6 +9,7 @@ import listoutFiles from './Filebase/listoutFiles.js';
 import deleteFile from './Filebase/deleteFile.js';
 import uploadFile from './Filebase/uploadFile.js';
 import cidMatchingMongo from './Mongo/cidMatchingMongo.js';
+import googleAccount from './Signin/googleAccount.js';
 
 dotenv.config({ path: './.env' });
 
@@ -26,6 +27,7 @@ app.use(uploadFile);
 app.use(listoutFiles);
 app.use(deleteFile);
 app.use(cidMatchingMongo);
+app.use(googleAccount);
 
 app.listen(PORT, () => {
   console.log(`Backend server running on ${process.env.BACKEND_PORT_URL}`);

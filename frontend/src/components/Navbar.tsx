@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { useWeb3 } from '@/contexts/Web3Context';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
+import { useModal } from './helperComponents/ConfirmationModal';
 import { useProfile } from '../contexts/ProfileContext';
 
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout, authenticationType, user } = useAuth();
   const { address, isConnected, connectWallet, disconnectWallet } = useWeb3();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { openDisconnect, setOnConfirmDisconnect } = useModal();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [mongoStatus, setMongoStatus] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -25,6 +26,11 @@ const Navbar = () => {
       fetchProfileData();
     }
   }, [isConnected, address]);
+
+  const disconnectEmail = async () => {
+    setOnConfirmDisconnect(() => logout);
+    openDisconnect();
+  }
   const fetchProfileData = async () => {
     try {
       const res = await fetch(`${backendUrl}/api/profile/show/${address}`);
@@ -139,15 +145,16 @@ const Navbar = () => {
         transition-all duration-300
         overflow-hidden
         pointer-events-none
-        group-hover:w-48 w-0
         group-hover:pl-4 pl-0
         h-14
         bg-transparent
+          ${authenticationType === 'google' ? 'group-hover:w-60 w-0' : 'group-hover:w-48 w-0'}}
       `}
           style={{ zIndex: 10 }}
         >
           <span className="text-[#00BFFF] text-sm font-mono bg-white dark:bg-gray-800 rounded px-2 py-1 shadow transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-            {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ''}
+            
+                    {authenticationType === 'metamask' ? `${address.slice(0, 6)}...${address.slice(-4)}` : user?.email}
           </span>
         </div>
         {open && (
@@ -172,32 +179,6 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const AvatarComponent = () => (
-    <div className="relative rounded-full p-2 bg-[#00BFFF]/20">
-      <Avatar className="w-32 h-32 ring-2 ring-[#00BFFF] ring-offset-2 ring-offset-gray-900">
-        {globalProfileImage || profileImage ? (
-          <AvatarImage
-            src={globalProfileImage || profileImage}
-            alt="Profile"
-            className="w-full h-full object-cover rounded-full"
-            onError={(e) => {
-              e.currentTarget.src = '';
-              toast({
-                title: 'Error loading image',
-                description: 'Could not load profile image',
-                variant: 'destructive',
-              });
-            }}
-          />
-        ) : (
-          <AvatarFallback className="bg-gray-800 dark:bg-gray-700">
-            <User className="w-16 h-16 text-[#00BFFF]" />
-          </AvatarFallback>
-        )}
-      </Avatar>
-    </div>
-  );
-
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 w-full border-b transition-all duration-300 backdrop-blur-sm ${
@@ -220,7 +201,7 @@ const Navbar = () => {
 
           {/* Right section - Auth buttons and theme toggle */}
           <div className="flex items-center space-x-2">
-            {address && (
+            {isAuthenticated && (
               <div className="flex space-x-2 items-center">
                 <Button
                   onClick={handleMongoConnect}
@@ -250,7 +231,7 @@ const Navbar = () => {
               </div>
             )}
             <div className="flex items-center space-x-4">
-              {isConnected && address ? (
+              {isAuthenticated && (
                 <DropdownMenu>
                   <Link to={`/`}>
                     <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
@@ -277,20 +258,13 @@ const Navbar = () => {
                   >
                     Disconnect Wallet
                   </button>
-                </DropdownMenu>
-              ) : (
-                <>
-                  <a
-                    href="https://metamask.app.link/dapp/storage-x-theta.vercel.app/"
-                    className={`${
-                      theme === 'dark'
-                        ? 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-black'
-                        : 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-white'
-                    }`}
+                  <button
+                    onClick={disconnectEmail}
+                    className="block text-left w-full px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
                   >
-                    Open in Metamask App
-                  </a>
-                </>
+                    Sign out
+                  </button>
+                </DropdownMenu>
               )}
 
               <Button
@@ -312,3 +286,5 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
+

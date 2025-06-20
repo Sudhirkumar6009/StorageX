@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAccount, useConnect, useDisconnect, useAccountEffect } from 'wagmi';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from './AuthContext';
+import { useModal } from '@/components/helperComponents/ConfirmationModal';
 
 interface IWeb3Context {
   address?: string;
@@ -16,6 +18,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout, authStatus, login } = useAuth();
+  const { openDisconnect, setOnConfirmDisconnect } = useModal();
   const { address, isConnected } = useAccount();
   const { connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
@@ -38,21 +42,34 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     },
   });
 
-  const connectWallet = (e?: React.MouseEvent) => {
+  const connectWallet = async (e?: React.MouseEvent) => {
     if (connectors.length > 0) {
-      connect({ connector: connectors[0] });
+      try {
+        await connect({ connector: connectors[0] });
+        // After successful connection, update auth status
+        if (address) {
+          await login(address, 'metamask');
+        }
+      } catch (error) {
+        console.error('Failed to connect wallet:', error);
+      }
     }
   };
 
   const disconnectWallethis = () => {
-    disconnect();
+    setOnConfirmDisconnect(() => {
+      disconnect();
+      logout();
+    });
+    openDisconnect();
   };
 
   return (
     <Web3Context.Provider
       value={{
         address,
-        isConnected: !!isConnected,
+        isConnected: authStatus === 'authenticated',
+
         connectWallet,
         disconnectWallet: () => setShowDisconnectConfirm(true),
       }}

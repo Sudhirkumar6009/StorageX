@@ -46,9 +46,6 @@ router.post('/api/filebase/upload', upload.single('file'), async (req, res) => {
     });
     await s3.send(putCommand);
 
-    console.log('Waiting 5 seconds for Filebase to process...');
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
     const headCommand = new HeadObjectCommand({
       Bucket: process.env.FILEBASE_BUCKET,
       Key: file.originalname,
@@ -77,5 +74,67 @@ router.post('/api/filebase/upload', upload.single('file'), async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+
+
+
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+router.post('/api/filebase/google/upload', upload.single('file'), async (req, res) => {
+  const file = req.file;
+  const { email } = req.body;
+  if (!file || !email) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'File and Email required' });
+  }
+  try {
+    console.log('Uploading file:', file.originalname);
+    const putCommand = new PutObjectCommand({
+      Bucket: process.env.FILEBASE_BUCKET,
+      Key: file.originalname,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    });
+    await s3.send(putCommand);
+
+    console.log('Waiting 5 seconds for Filebase to process...');
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    const headCommand = new HeadObjectCommand({
+      Bucket: process.env.FILEBASE_BUCKET,
+      Key: file.originalname,
+    });
+    const headRes = await s3.send(headCommand);
+
+    const cid = headRes.Metadata && headRes.Metadata['cid'];
+    if (cid) {
+      console.log('CID:', cid);
+      await client.connect();
+      const db = client.db('Accounts');
+      const accounts = db.collection('EmailUsers');
+      await accounts.updateOne(
+        { email: email },
+        { $push: { storage: cid } }
+      );
+      return res.json({ success: true, cid });
+    } else {
+      console.warn('No CID found in metadata.');
+      return res
+        .status(500)
+        .json({ success: false, message: 'No CID found in metadata.' });
+    }
+  } catch (err) {
+    console.error('❌ Upload error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
 export default router;
