@@ -10,7 +10,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import Tooltip from '@mui/material/Tooltip';
 import { useWeb3 } from '../contexts/Web3Context';
 import { OrbitProgress, Riple } from 'react-loading-indicators';
-import { useAuth } from '@/contexts/AuthContext';
+import { useGoogleLogin } from '@react-oauth/google';
+import { useAuth } from '@/contexts/AuthContext.js'; 
 
 import {
   createCustomWallet,
@@ -19,7 +20,7 @@ import {
 
 const Signup = () => {
   const { theme } = useTheme();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { address, isConnected, connectWallet, disconnectWallet } = useWeb3();
   const [walletInfo, setWalletInfo] = useState(null);
@@ -35,43 +36,6 @@ const Signup = () => {
       setShowConnected(true);
     }
   }, [isConnected]);
-//   const googleLogin = useGoogleLogin({
-//   onSuccess: async (tokenResponse) => {
-//     try {
-//       const userInfoResponse = await fetch(
-//         'https://www.googleapis.com/oauth2/v3/userinfo',
-//         {
-//           headers: {
-//             Authorization: `Bearer ${tokenResponse.access_token}`,
-//           },
-//         }
-//       );
-
-//       const userInfo = await userInfoResponse.json();
-//       const res = await fetch(`${import.meta.env.VITE_BACKEND_PORT_URL}/api/googleAccount`, {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify({ email: userInfo.email }),
-//       });
-
-//       const data = await res.json();
-//       if (data.success) {
-//         login('google'); // Login as Google user
-//         navigate('/dashboard');
-//       } else {
-//         alert('Account creation failed: ' + (data.error || 'Unknown error'));
-//       }
-//     } catch (error) {
-//       console.error('Error fetching Google user info:', error);
-//     }
-//   },
-//   onError: (error) => {
-//     console.error('Login Failed:', error);
-//   },
-// });
-
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -93,6 +57,44 @@ const Signup = () => {
       duration: 3000,
     });
   };
+
+  const googleLogin = useGoogleLogin({
+  onSuccess: async (tokenResponse) => {
+    try {
+      const userInfoResponse = await fetch(
+        'https://www.googleapis.com/oauth2/v3/userinfo',
+        {
+          headers: {
+            Authorization: `Bearer ${tokenResponse.access_token}`,
+          },
+        }
+      );
+
+      const userInfo = await userInfoResponse.json();
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_PORT_URL}/api/googleAccount`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: userInfo.email }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        await login(userInfo.email, 'google');
+        navigate('/dashboard');
+      } else {
+        alert('Account creation failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error fetching Google user info:', error);
+    }
+  },
+  onError: (error) => {
+    console.error('Login Failed:', error);
+  },
+});
+
   const handleCreateWallet = async () => {
     if (!isConnected) {
       sendToast();
@@ -155,11 +157,6 @@ const Signup = () => {
     } finally {
       setLoadingCreation(false); // Always stop loading at the end
     }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -295,8 +292,7 @@ const Signup = () => {
                   </Avatar>
                 </Button>
               </div>
-
-              {/* <div>
+                            <div>
                 <Button
                   variant="outline"
                   style={{
@@ -315,7 +311,7 @@ const Signup = () => {
                   <svg className="mr-1 w-5 h-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
                   Continue with Google
                 </Button>
-              </div> */}
+              </div>
 
               <Button
                 type="button"
