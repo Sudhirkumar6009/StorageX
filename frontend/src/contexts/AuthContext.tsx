@@ -63,13 +63,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     checkAuthStatus();
   }, [user, loginMethod]);
-  useEffect(() => {
-    localStorage.removeItem('user');
-    setUser(null);
-    setLoginMethod(null);
-    setAuthStatus('unauthenticated');
-  }, []);
-  // Enhance login function to handle both Google and Metamask
   const login = async (email: string, method: 'metamask' | 'google'): Promise<boolean> => {
     try {
       setAuthStatus('loading');

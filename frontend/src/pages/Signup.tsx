@@ -50,6 +50,7 @@ const Signup = () => {
   const googleLogin = useGoogleLogin({
   onSuccess: async (tokenResponse) => {
     try {
+      setLoadingCreation(true);
       const userInfoResponse = await fetch(
         'https://www.googleapis.com/oauth2/v3/userinfo',
         {
@@ -70,6 +71,7 @@ const Signup = () => {
 
       const data = await res.json();
       if (data.success) {
+        setLoadingCreation(false);
         await login(userInfo.email, 'google');
         navigate('/dashboard');
       } else {
@@ -80,6 +82,7 @@ const Signup = () => {
     }
   },
   onError: (error) => {
+    setLoadingCreation(false);
     console.error('Login Failed:', error);
   },
 });

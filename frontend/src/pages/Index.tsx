@@ -4,11 +4,9 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useWeb3 } from '../contexts/Web3Context';
 
 const Index = () => {
   const { theme } = useTheme();
-  const { isConnected } = useWeb3();
   const { isAuthenticated } = useAuth();
 
   const features = [

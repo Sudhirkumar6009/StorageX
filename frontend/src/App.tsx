@@ -38,10 +38,6 @@ const GlobalModals = () => {
     <DisconnectConfirmModal
       open={showDisconnect}
       onCancel={closeDisconnect}
-      onConfirm={() => {
-        closeDisconnect();
-        onConfirmDisconnect();
-      }}
     />
   );
 };
