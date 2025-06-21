@@ -12,6 +12,7 @@ import { useWeb3 } from '../contexts/Web3Context';
 import { OrbitProgress, Riple } from 'react-loading-indicators';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '@/contexts/AuthContext.js'; 
+import { Info, X } from 'lucide-react';
 
 import {
   createCustomWallet,
@@ -22,32 +23,20 @@ const Signup = () => {
   const { theme } = useTheme();
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { address, isConnected, connectWallet, disconnectWallet } = useWeb3();
+
+  const { address, isConnected, connectWallet } = useWeb3();
   const [walletInfo, setWalletInfo] = useState(null);
+  const [connectClicked, setConnectClicked] = useState(false);
   const [loadingCreation, setLoadingCreation] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
   });
-  const [showconnected, setShowConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (isConnected) {
-      setShowConnected(true);
-    }
-  }, [isConnected]);
-
-  const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-
-    return Object.keys(newErrors).length === 0;
-  };
+  const closeEmailReq = () => {
+    setConnectClicked(false);
+    setFormData({email: ''});
+  }
 
   const sendToast = () => {
     toast({
@@ -181,87 +170,113 @@ const Signup = () => {
             >
               Join StorageX
             </CardTitle>
-            <p
-              className={`text-sm ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-              }`}
-            >
-              Create your decentralized storage account
-            </p>
           </CardHeader>
           <CardContent>
             <form className="space-y-6 pt-4">
-              <div className="pb-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <Label
-                    htmlFor="email"
-                    className={`flex items-center gap-1 ${
-                      theme === 'dark' ? 'text-white' : 'text-gray-900'
-                    }`}
-                    style={{ marginBottom: 0 }}
-                  >
-                    Email
-                    <em
-                      style={{
-                        fontSize: '10px',
-                        paddingLeft: '0.2rem',
-                        letterSpacing: '0.03rem',
-                        fontWeight: 'normal',
-                        paddingTop: '0.1rem',
-                      }}
-                    >
-                      Optional
-                    </em>
-                  </Label>
-                  <div className="flex-1" />
-                  <Tooltip
-                    placement="top"
-                    title="Providing Updates and notifications through email"
-                    arrow
-                  >
-                    <span
-                      style={{
-                        borderRadius: '50%',
-                        width: '20px',
-                        height: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontFamily: 'monospace',
-                        cursor: 'pointer',
-                        border: `1.5px solid #00BFFF`,
-                        color: theme === 'dark' ? '#00BFFF' : '#00BFFF',
-                        background: theme === 'dark' ? '#222' : '#fff',
-                        fontWeight: 'bold',
-                        fontSize: '15px',
-                      }}
-                      className="shadow transition-opacity duration-300 hover:opacity-50"
-                    >
-                      i
-                    </span>
-                  </Tooltip>
-                </div>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
+
+            <div className="relative">
+                <Button
+                  variant="outline"
                   style={{
+                    fontSize: '1rem',
                     fontWeight: '600',
-                    letterSpacing: '0.05rem',
                     height: '50px',
-                    marginTop: '0.8rem',
                   }}
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, email: e.target.value }))
-                  }
-                  className={`mt-1${
+                  className={`w-full text-lg px-8 py-2 ${
                     theme === 'dark'
-                      ? 'bg-gray-800 border-gray-700 text-white'
-                      : 'bg-white border-gray-300'
-                  }`}
-                  placeholder="Enter your email"
-                />
+                      ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
+                      : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
+                  } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => {
+                    connectWallet();
+                    {!isConnected &&
+                      setConnectClicked(true);
+                    }
+                  }}
+                  type="button"
+                >
+                  {isConnected ? 'MetaMask Connected' : 'Connect MetaMask'}
+                  <Avatar className="w-6 h-6 mt-1 ml-1 rounded-full">
+                    <AvatarFallback className="bg-transparent rounded-full">
+                      <img
+                        src="https://i.ibb.co/n4y03Fs/Metamask-NZ-Crypto-wallet.png"
+                        alt="Metamask"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+                <div
+                  className={`
+                    w-full
+                    overflow-hidden
+                    transition-all duration-1000 ease-in-out
+                    ${isConnected && connectClicked ? 'max-h-40 opacity-100 translate-y-0 mt-6' : 'max-h-0 opacity-0 -translate-y-4'}
+                  `}
+                >
+                  <div className="relative bg-black border border-cyan-400 rounded-xl shadow-lg p-5 flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center mb-2">
+                        <Label
+                          htmlFor="email"
+                          className={`flex items-center gap-2 text-sm font-semibold ${
+                            theme === 'dark' ? 'text-white' : 'text-gray-900'
+                          }`}
+                        >
+                          Email
+                          <em className="text-xs font-normal not-italic text-gray-400">Optional</em>
+                        </Label>
+                            <Tooltip
+                              placement="top"
+                              title=" For Profile Management, Updates and Notifications facilities through email. We can modify or remove this anytime"
+                              arrow
+                            >
+                              <span
+                                className="w-4 h-4 flex items-center ml-2 justify-center text-cyan-400 border border-cyan-400 rounded-full font-bold p-2 cursor-pointer hover:opacity-70 transition-opacity"
+                                style={{
+                                  fontFamily: 'algerian',
+                                  backgroundColor: theme === 'dark' ? '#1a1a1a' : '#fff',
+                                }}
+                              >
+                                i
+                              </span>
+                            </Tooltip>
+                      </div>
+
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={formData.email}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, email: e.target.value }))
+                        }
+                        style={{
+                          height: '50px',
+                          paddingLeft: '1rem',
+                          fontWeight: 600,
+                          letterSpacing: '0.03rem',
+                        }}
+                        className={`w-full rounded-lg mt-1 border ${
+                          theme === 'dark'
+                            ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500'
+                            : 'bg-white border-gray-300 text-black'
+                        } focus:ring-2 focus:ring-cyan-400 outline-none transition-all`}
+                      />
+                    </div>
+
+                    {/* Close Button */}
+                    <button
+                      type="button"
+                      aria-label="Close"
+                      onClick={closeEmailReq}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full hover:bg-red-300 text-red-900 text-xl font-bold grid place-items-center transition-all shadow-md"
+                    >
+                      <X size={15}/>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -276,35 +291,7 @@ const Signup = () => {
                     theme === 'dark'
                       ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
                       : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
-                  } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={connectWallet}
-                  type="button"
-                >
-                  {isConnected ? 'MetaMask Connected' : 'Connect MetaMask'}
-                  <Avatar className="w-6 h-6 mt-1 ml-1 rounded-full">
-                    <AvatarFallback className="bg-transparent rounded-full">
-                      <img
-                        src="https://i.ibb.co/n4y03Fs/Metamask-NZ-Crypto-wallet.png"
-                        alt="Metamask"
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </div>
-              <div>
-                <Button
-                  variant="outline"
-                  style={{
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    height: '50px',
-                  }}
-                  className={`w-full text-lg px-8 py-2 ${
-                    theme === 'dark'
-                      ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
-                      : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
-                  } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  }`}
                   onClick={() => {googleLogin()}}
                   type="button"
                 >
@@ -333,11 +320,7 @@ const Signup = () => {
                   ${!isConnected ? 'opacity-50 cursor-not-allowed' : ''}
                 `}
               >
-                {isLoading
-                  ? 'Creating account...'
-                  : !isConnected
-                  ? 'Connect MetaMask First'
-                  : 'Create Account'}
+                {isConnected || isAuthenticated ? "Create Account" : "Select to Create Account"} 
               </Button>
             </form>
 

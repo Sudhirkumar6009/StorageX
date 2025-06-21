@@ -31,6 +31,10 @@ const Navbar = () => {
     setOnConfirmDisconnect(() => logout);
     openDisconnect();
   }
+  const disconnectWalletthis = async () => {
+    setOnConfirmDisconnect(() => logout);
+    openDisconnect();
+  }
   const fetchProfileData = async () => {
     try {
       const res = await fetch(`${backendUrl}/api/profile/show/${address}`);
@@ -153,9 +157,12 @@ const Navbar = () => {
           style={{ zIndex: 10 }}
         >
           <span className="text-[#00BFFF] text-sm font-mono bg-white dark:bg-gray-800 rounded px-2 py-1 shadow transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-            
-                    {authenticationType === 'metamask' ? `${address.slice(0, 6)}...${address.slice(-4)}` : user?.email}
-          </span>
+  {authenticationType === 'metamask'
+    ? address
+      ? `${address.slice(0, 6)}...${address.slice(-4)}`
+      : ''
+    : user?.email}
+</span>
         </div>
         {open && (
           <div className="border-b absolute left-0 mt-5 w-48 bg-white dark:bg-gray-800 rounded shadow-lg z-50 flex flex-col border border-none">
@@ -252,18 +259,21 @@ const Navbar = () => {
                   <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
                     Option 4
                   </button>
+                  {authenticationType === 'metamask' ? (
                   <button
-                    onClick={disconnectWallet}
+                    onClick={disconnectWalletthis}
                     className="block text-left w-full px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
                   >
                     Disconnect Wallet
                   </button>
+                  ) : (
                   <button
                     onClick={disconnectEmail}
                     className="block text-left w-full px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
                   >
                     Sign out
                   </button>
+                  )}
                 </DropdownMenu>
               )}
 

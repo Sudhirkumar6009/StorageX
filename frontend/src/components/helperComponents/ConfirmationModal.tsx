@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
+import { useDisconnect } from 'wagmi';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ModalContextType {
   showDisconnect: boolean;
@@ -16,17 +18,17 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const openDisconnect = () => setShowDisconnect(true);
   const closeDisconnect = () => setShowDisconnect(false);
-
+  
   return (
     <ModalContext.Provider
-      value={{
+    value={{
         showDisconnect,
         openDisconnect,
         closeDisconnect,
         onConfirmDisconnect,
         setOnConfirmDisconnect,
       }}
-    >
+      >
       {children}
     </ModalContext.Provider>
   );
@@ -42,9 +44,20 @@ export const useModal = () => {
 export const DisconnectConfirmModal: React.FC<{
   open: boolean;
   onCancel: () => void;
-  onConfirm: () => void;
-}> = ({ open, onCancel, onConfirm }) => {
+}> = ({ open, onCancel }) => {
+  const { authenticationType, logout } = useAuth();
+  const { disconnect } = useDisconnect(); 
   if (!open) return null;
+  const handleConfirm = () => {
+    if (authenticationType === 'metamask') {
+      disconnect();
+      logout();
+    }
+    else if (authenticationType === 'google') {
+      logout();
+  }
+  onCancel();
+}
   return (
     <div
       className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-40"
@@ -55,7 +68,7 @@ export const DisconnectConfirmModal: React.FC<{
           Are you sure?
         </h2>
         <p className="mb-6 text-gray-600 dark:text-gray-300">
-          Do you really want to disconnect your wallet?
+          Do you really want to disconnect your Account?
         </p>
         <div className="flex justify-end space-x-2">
           <button
@@ -65,7 +78,7 @@ export const DisconnectConfirmModal: React.FC<{
             Cancel
           </button>
           <button
-            onClick={onConfirm}
+            onClick={handleConfirm}
             className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
           >
             Disconnect
