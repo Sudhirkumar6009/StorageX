@@ -111,7 +111,7 @@ const Dashboard = () => {
       if (data.success) {
         setCids(data.cids);
       } else {
-        setError("Something went wrong");
+        setError('Something went wrong');
       }
     } catch (err) {
       setError('Error fetching CIDs');
@@ -295,7 +295,7 @@ const Dashboard = () => {
           }
         );
       } else if (authenticationType === 'google') {
-       res = await fetch(
+        res = await fetch(
           `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/google/delete`,
           {
             method: 'POST',
@@ -306,7 +306,7 @@ const Dashboard = () => {
               fileName: file.key,
             }),
           }
-        ); 
+        );
       }
 
       const data = await res.json();
@@ -503,11 +503,17 @@ const Dashboard = () => {
                       theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                     }`}
                   >
-                    {authenticationType === 'metamask' ? `${metamaskAddress.slice(0, 6)}...${metamaskAddress.slice(-4)}` : user?.email}
-
+                    {authenticationType === 'metamask'
+                      ? metamaskAddress
+                        ? `${metamaskAddress.slice(
+                            0,
+                            6
+                          )}...${metamaskAddress.slice(-4)}`
+                        : 'Not Connected'
+                      : user?.email || 'Not Connected'}
                   </p>
                 </div>
-
+                <p></p>
                 <div>
                   <Label
                     className={

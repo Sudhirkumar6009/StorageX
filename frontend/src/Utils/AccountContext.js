@@ -26,19 +26,3 @@ export async function storePublicAddress(email, data) {
     return { success: false, error: error.message };
   }
 }
-function loginWithMnemonic(mnemonic) {
-  try {
-    const wallet = ethers.Wallet.fromMnemonic(mnemonic);
-    return wallet.address;
-  } catch (error) {
-    console.error('Invalid mnemonic:', error);
-    return null;
-  }
-}
-
-// // When creating a new account (custom wallet + MetaMask)
-// const wallet = createCustomWallet();
-// const response = await storePublicAddress(formData.email, {
-//   public: wallet.address,
-//   MetaMask: address, // MetaMask address from web3
-// });

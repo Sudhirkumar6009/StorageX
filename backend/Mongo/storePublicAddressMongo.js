@@ -17,11 +17,10 @@ router.post('/api/store-address', async (req, res) => {
   try {
     await client.connect();
 
-    const { email, MetaMask, public: publicData } = req.body;
+    const { email, MetaMask } = req.body;
     const db = client.db('Users');
     const addressesCollection = db.collection('Accounts');
 
-    // Only MetaMask is unique
     if (!MetaMask) {
       return res.json({
         success: false,
@@ -29,7 +28,6 @@ router.post('/api/store-address', async (req, res) => {
       });
     }
 
-    // Block if MetaMask address exists in any document
     const existingMetaMask = await addressesCollection.findOne({ MetaMask });
     if (existingMetaMask) {
       return res.json({
@@ -39,7 +37,6 @@ router.post('/api/store-address', async (req, res) => {
       });
     }
 
-    // Create new document with public key
     const newDoc = {
       email: email || 'Not Provided',
       MetaMask,

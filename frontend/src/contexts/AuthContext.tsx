@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
 interface User {
@@ -48,8 +54,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loginMethod, setLoginMethod] = useState<'metamask' | 'google' | null>(null);
-  const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
+  const [loginMethod, setLoginMethod] = useState<'metamask' | 'google' | null>(
+    null
+  );
+  const [authStatus, setAuthStatus] = useState<
+    'loading' | 'authenticated' | 'unauthenticated'
+  >('loading');
 
   const checkAuthStatus = useCallback(async () => {
     if (user && loginMethod) {
@@ -63,16 +73,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     checkAuthStatus();
   }, [user, loginMethod]);
-  const login = async (email: string, method: 'metamask' | 'google'): Promise<boolean> => {
+  const login = async (
+    email: string,
+    method: 'metamask' | 'google'
+  ): Promise<boolean> => {
     try {
       setAuthStatus('loading');
       // Store auth info in localStorage for persistence
-      localStorage.setItem('user', JSON.stringify({ email, loginMethod: method }));
-      
-      setUser({ 
-        email, 
+      localStorage.setItem(
+        'user',
+        JSON.stringify({ email, loginMethod: method })
+      );
+
+      setUser({
+        email,
         id: Date.now().toString(),
-        loginMethod: method 
+        loginMethod: method,
       });
       setLoginMethod(method);
       setAuthStatus('authenticated');
@@ -83,42 +99,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const signup = async (email: string, method: 'metamask' | 'google'): Promise<boolean> => {
+  const signup = async (
+    email: string,
+    method: 'metamask' | 'google'
+  ): Promise<boolean> => {
     if (email) {
-      setUser({ 
-        email, 
+      setUser({
+        email,
         id: Date.now().toString(),
-        loginMethod: method 
+        loginMethod: method,
       });
       setLoginMethod(method);
       return true;
     }
     return false;
   };
-
+  // ...existing code...
   useEffect(() => {
-    // Example: check localStorage for persisted user
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
       setLoginMethod(parsedUser.loginMethod);
       setAuthStatus('authenticated');
-      // Add this check:
-      fetch(`${import.meta.env.VITE_BACKEND_PORT_URL}/api/googleAccount`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: parsedUser.email }),
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (!data.success) {
-            logout();
-          }
+      // Check with backend for Google or MetaMask
+      if (parsedUser.loginMethod === 'google') {
+        fetch(`${import.meta.env.VITE_BACKEND_PORT_URL}/api/googleAccount`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: parsedUser.email }),
         })
-        .catch(() => {
-          logout();
-        });
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.success) {
+              logout();
+            }
+          })
+          .catch(() => {
+            logout();
+          });
+      } else if (parsedUser.loginMethod === 'metamask') {
+        fetch(`${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetchUser`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: parsedUser.email }), // or parsedUser.address if you store it
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.success) {
+              logout();
+            }
+          })
+          .catch(() => {
+            logout();
+          });
+      }
     } else {
       setAuthStatus('unauthenticated');
     }
@@ -143,7 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isAuthenticated: authStatus === 'authenticated',
         authStatus,
         authenticationType: loginMethod,
-        checkAuthStatus
+        checkAuthStatus,
       }}
     >
       {children}

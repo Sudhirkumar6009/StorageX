@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,19 +20,20 @@ const Login = () => {
   const { theme } = useTheme();
   const { address, isConnected, connectWallet, disconnectWallet } = useWeb3();
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, authenticationType } = useAuth();
   const [fetchloading, setFetchLoading] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [seedPhrase, setSeedPhrase] = useState('');
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
+        setFetchLoading(true);
         const userInfoResponse = await fetch(
           'https://www.googleapis.com/oauth2/v3/userinfo',
           {
@@ -41,18 +42,22 @@ const Login = () => {
             },
           }
         );
-  
+
         const userInfo = await userInfoResponse.json();
-        const res = await fetch(`${import.meta.env.VITE_BACKEND_PORT_URL}/api/googleAccount`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email: userInfo.email }),
-        });
-  
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/googleAccount`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: userInfo.email }),
+          }
+        );
+
         const data = await res.json();
         if (data.success) {
+          setFetchLoading(false);
           await login(userInfo.email, 'google');
           navigate('/dashboard');
         } else {
@@ -71,42 +76,37 @@ const Login = () => {
     try {
       if (!isConnected) {
         toast({
-          title: 'Connect MetaMask First',
-          description: 'Please connect your MetaMask wallet to continue.',
-          variant: 'destructive',
-          duration: 3000,
-        });
-        return;
-      } else if (!seedPhrase) {
-        toast({
-          title: 'Seed Phrase Required',
-          description: 'Please enter your mnemonic seed phrase.',
+          title: 'Select to Continue',
+          description:
+            'Please connect your MetaMask wallet or continue with Google.',
           variant: 'destructive',
           duration: 3000,
         });
         return;
       }
       setFetchLoading(true);
-      const wallet = ethers.Wallet.fromPhrase(seedPhrase.trim());
-      const publicAddress = wallet.address;
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetchUserProfile`,
+
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetchUser`,
         {
-          address: publicAddress,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address }),
         }
       );
-
-      if (response.data.success) {
+      const data = await res.json();
+      if (data.success) {
+        if (address) {
+          await login(address, 'metamask');
+        }
         setFetchLoading(false);
-        const val = response.data.profile.MetaMask
-          ? `${response.data.profile.MetaMask.slice(
-              0,
-              6
-            )}...${response.data.profile.MetaMask.slice(-4)}`
-          : '';
         toast({
           title: 'Login Successful',
-          description: `Welcome back, ${val || 'User'}`,
+          description: `Welcome back, ${
+            address.slice(0, 6) + '...' + address.slice(-5) || 'User'
+          }`,
         });
         navigate('/dashboard');
       } else {
@@ -124,15 +124,6 @@ const Login = () => {
           err.message || 'Could not generate wallet from seed phrase.',
         variant: 'destructive',
       });
-    }
-  };
-  const handleSubmit = async (e: React.FormEvent) => {};
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
@@ -167,7 +158,7 @@ const Login = () => {
             </p>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form className="space-y-4">
               <Tooltip
                 placement="top"
                 title="Please enter the Mnemonic key words was generated during account creation"
@@ -195,43 +186,6 @@ const Login = () => {
                   i
                 </span>
               </Tooltip>
-              <TextField
-                id="Name"
-                label="Mnemonic Key"
-                margin="dense"
-                variant="outlined"
-                value={seedPhrase}
-                onChange={(e) => setSeedPhrase(e.target.value)}
-                size="medium"
-                sx={{
-                  width: '100%',
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      border: '1px solid gray',
-                    },
-                    '&:hover fieldset': {
-                      border: '1px solid white',
-                    },
-                    '&.Mui-focused fieldset': {
-                      border: '2px solid #00BFFF',
-                    },
-                    input: {
-                      color: theme === 'dark' ? '#FFFFFF' : '#000000', // Input text color
-                      fontFamily: 'Inter, sans-serif', // Custom font family
-                      fontSize: '1rem',
-                      fontWeight: 400,
-                      letterSpacing: '0.025em',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: '#fff', // Label color
-                    fontFamily: 'Inter, sans-serif',
-                    '&.Mui-focused': {
-                      color: '#00BFFF', // Focused label color
-                    },
-                  },
-                }}
-              />
               <div>
                 <Button
                   variant="outline"
@@ -244,11 +198,27 @@ const Login = () => {
                     theme === 'dark'
                       ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
                       : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
-                  } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={connectWallet}
+                  } ${
+                    isConnected || connecting
+                      ? 'opacity-50 cursor-not-allowed'
+                      : ''
+                  }`}
+                  onClick={async () => {
+                    setConnecting(true);
+                    try {
+                      await connectWallet();
+                    } finally {
+                      setConnecting(false);
+                    }
+                  }}
+                  disabled={isConnected || connecting || isAuthenticated}
                   type="button"
                 >
-                  {isConnected ? 'MetaMask Connected' : 'Connect MetaMask'}
+                  {isConnected
+                    ? 'MetaMask Connected'
+                    : connecting
+                    ? 'Connecting...'
+                    : 'Connect MetaMask'}
                   <Avatar className="w-6 h-6 mt-1 ml-1 rounded-full">
                     <AvatarFallback className="bg-transparent rounded-full">
                       <img
@@ -261,27 +231,45 @@ const Login = () => {
                 </Button>
               </div>
               <div>
-                              <Button
-                                variant="outline"
-                                style={{
-                                  fontSize: '1rem',
-                                  fontWeight: '600',
-                                  height: '50px',
-                                }}
-                                className={`w-full text-lg px-8 py-2 ${
-                                  theme === 'dark'
-                                    ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
-                                    : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
-                                }`}
-                                onClick={() => {googleLogin()}}
-                                type="button"
-                              >
-                                <svg className="mr-1 w-5 h-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
-                                Continue with Google
-                              </Button>
-                            </div>
+                <Button
+                  variant="outline"
+                  disabled={isAuthenticated}
+                  style={{
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    height: '50px',
+                  }}
+                  className={`w-full text-lg px-8 py-2 ${
+                    theme === 'dark'
+                      ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
+                      : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
+                  }`}
+                  onClick={() => {
+                    googleLogin();
+                  }}
+                  type="button"
+                >
+                  <svg
+                    className="mr-1 w-5 h-5"
+                    aria-hidden="true"
+                    focusable="false"
+                    data-prefix="fab"
+                    data-icon="google"
+                    role="img"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 488 512"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
+                    ></path>
+                  </svg>
+                  Continue with Google
+                </Button>
+              </div>
               <Button
                 type="button"
+                disabled={isAuthenticated}
                 onClick={handleLogin}
                 style={{
                   marginTop: '3rem',
@@ -298,7 +286,13 @@ const Login = () => {
                   ${!isConnected ? 'opacity-50 cursor-not-allowed' : ''}
                 `}
               >
-                {isLoading ? 'Signing in...' : 'Sign In'}
+                {isAuthenticated
+                  ? `Already Logged in with ${
+                      authenticationType === 'google' ? 'Google' : 'MetaMask'
+                    }`
+                  : isLoading
+                  ? 'Signing in...'
+                  : 'Sign In'}
               </Button>
             </form>
 

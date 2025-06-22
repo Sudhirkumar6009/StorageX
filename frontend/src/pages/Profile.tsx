@@ -151,11 +151,8 @@ const Profile = () => {
         });
         await fetchProfileData();
       } else {
-        // ...existing error handling...
       }
-    } catch (err: any) {
-      // ...existing error handling...
-    }
+    } catch (err: any) {}
   };
 
   const handleCopy = async () => {

@@ -13,12 +13,12 @@ const client = new MongoClient(process.env.ATLAS_URI, {
   },
 });
 
-router.post('/api/fetchUserProfile', async (req, res) => {
+router.post('/api/fetchUser', async (req, res) => {
   const { address } = req.body;
   await client.connect();
   const db = client.db('Users');
   const Collection = db.collection('Accounts');
-  const user = await Collection.findOne({ public: address });
+  const user = await Collection.findOne({ MetaMask: address });
   if (user) {
     return res.json({ success: true, profile: user });
   } else {

@@ -157,12 +157,12 @@ const Navbar = () => {
           style={{ zIndex: 10 }}
         >
           <span className="text-[#00BFFF] text-sm font-mono bg-white dark:bg-gray-800 rounded px-2 py-1 shadow transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-  {authenticationType === 'metamask'
-    ? address
-      ? `${address.slice(0, 6)}...${address.slice(-4)}`
-      : ''
-    : user?.email}
-</span>
+          {authenticationType === 'metamask'
+            ? address
+              ? `${address.slice(0, 6)}...${address.slice(-4)}`
+              : ''
+            : user?.email}
+        </span>
         </div>
         {open && (
           <div className="border-b absolute left-0 mt-5 w-48 bg-white dark:bg-gray-800 rounded shadow-lg z-50 flex flex-col border border-none">

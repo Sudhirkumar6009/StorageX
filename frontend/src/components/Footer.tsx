@@ -2,9 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useWeb3 } from '../contexts/Web3Context';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Footer = () => {
   const { isConnected } = useWeb3();
+  const { isAuthenticated } = useAuth();
   const { theme } = useTheme();
 
   return (
@@ -45,7 +47,7 @@ const Footer = () => {
               Quick Links
             </h4>
             <ul className="space-y-2">
-              {isConnected ? (
+              {isAuthenticated ? (
                 <>
                   <li>
                     <Link
