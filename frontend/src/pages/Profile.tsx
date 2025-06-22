@@ -48,7 +48,7 @@ const Profile = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authenticationType, user } = useAuth();
   const [fetchloading, setFetchLoading] = useState(false);
   const [savingLoading, setSavingLoading] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -58,32 +58,43 @@ const Profile = () => {
   const navigate = useNavigate();
   const backendUrl = import.meta.env.VITE_BACKEND_PORT_URL;
 
+  const selectionAddress =
+    authenticationType === 'metamask'
+      ? address
+      : authenticationType === 'google'
+      ? user?.email
+      : '';
+
   useEffect(() => {
-    if (address) {
+    if (selectionAddress) {
       fetchProfileData();
     }
-  }, [address]);
+  }, [selectionAddress]);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/'); // Redirect to home or login page
+      navigate('/');
     }
   }, [isAuthenticated, navigate]);
 
   const fetchProfileData = async () => {
     setFetchLoading(true);
     try {
-      // Validate address before making the request
-      if (!address || address.length !== 42 || !address.startsWith('0x')) {
-        throw new Error('Invalid wallet address');
+      let res;
+      if (authenticationType === 'metamask') {
+        if (!address || address.length !== 42 || !address.startsWith('0x')) {
+          throw new Error('Invalid wallet address');
+        }
+        res = await fetch(`${backendUrl}/api/profile/show/${address}`);
+      } else if (authenticationType === 'google') {
+        res = await fetch(
+          `${backendUrl}/api/profile/show/google/${user?.email}`
+        );
       }
-
-      const res = await fetch(`${backendUrl}/api/profile/show/${address}`);
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-
       const data = await res.json();
 
       if (data.success) {
@@ -128,18 +139,38 @@ const Profile = () => {
     setUpdatedProfile('Connecting...');
     setSavingLoading(true);
     try {
-      const res = await fetch(`${backendUrl}/api/profile/update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          walletAddress: address,
-          profileImage,
-        }),
-      });
+      let res;
+      const formData = new FormData();
+      if (authenticationType === 'metamask') {
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('walletAddress', address);
+        formData.append('profileImage', profileImage);
+        res = await fetch(`${backendUrl}/api/profile/update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            address,
+            profileImage,
+          }),
+        });
+      } else if (authenticationType === 'google') {
+        res = await fetch(`${backendUrl}/api/profile/google/update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            profileImage,
+          }),
+        });
+      }
 
       const data = await res.json();
 
@@ -159,11 +190,11 @@ const Profile = () => {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(address || '');
+      await navigator.clipboard.writeText(selectionAddress || '');
       setCopied(true);
       toast({
         title: 'Copied!',
-        description: 'Wallet address copied to clipboard',
+        description: 'Address copied to clipboard',
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -179,7 +210,6 @@ const Profile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (limit to 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: 'File too large',
@@ -326,15 +356,18 @@ const Profile = () => {
               <CardContent className="space-y-3">
                 <div>
                   <Label
-                    className={
+                    className={` pl-1 ${
                       theme === 'dark' ? 'text-white' : 'text-gray-900'
                     }
+                      `}
                   >
-                    Wallet Address
+                    {authenticationType === 'metamask'
+                      ? 'Wallet Address'
+                      : 'Email Address'}
                   </Label>
                   <div className="relative">
                     <Input
-                      value={address}
+                      value={selectionAddress}
                       readOnly
                       className={`
                         mt-3 

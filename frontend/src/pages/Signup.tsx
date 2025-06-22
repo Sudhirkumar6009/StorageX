@@ -11,7 +11,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { useWeb3 } from '../contexts/Web3Context';
 import { OrbitProgress, Riple } from 'react-loading-indicators';
 import { useGoogleLogin } from '@react-oauth/google';
-import { Info, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { userInfo } from 'os';
 import { useAuth } from '@/contexts/AuthContext.js';
 

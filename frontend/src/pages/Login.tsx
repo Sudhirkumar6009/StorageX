@@ -13,6 +13,7 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import { ethers } from 'ethers';
 import axios from 'axios';
+import { X } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { Riple } from 'react-loading-indicators';
 
@@ -23,13 +24,16 @@ const Login = () => {
   const { login, isAuthenticated, authenticationType } = useAuth();
   const [fetchloading, setFetchLoading] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [connectClicked, setConnectClicked] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
+  const closeEmailReq = () => {
+    setConnectClicked(false);
+    setFormData({ email: '' });
+  };
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -159,33 +163,6 @@ const Login = () => {
           </CardHeader>
           <CardContent>
             <form className="space-y-4">
-              <Tooltip
-                placement="top"
-                title="Please enter the Mnemonic key words was generated during account creation"
-                arrow
-              >
-                <span
-                  style={{
-                    borderRadius: '50%',
-                    width: '20px',
-                    height: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    placeSelf: 'flex-end',
-                    fontFamily: 'monospace',
-                    cursor: 'pointer',
-                    border: `1.5px solid #00BFFF`,
-                    color: theme === 'dark' ? '#00BFFF' : '#00BFFF',
-                    background: theme === 'dark' ? '#222' : '#fff',
-                    fontWeight: 'bold',
-                    fontSize: '15px',
-                  }}
-                  className="shadow transition-opacity duration-300 hover:opacity-50"
-                >
-                  i
-                </span>
-              </Tooltip>
               <div>
                 <Button
                   variant="outline"
@@ -207,6 +184,7 @@ const Login = () => {
                     setConnecting(true);
                     try {
                       await connectWallet();
+                      !isConnected && setConnectClicked(true);
                     } finally {
                       setConnecting(false);
                     }
@@ -229,6 +207,87 @@ const Login = () => {
                     </AvatarFallback>
                   </Avatar>
                 </Button>
+                <div
+                  className={`
+                                    w-full
+                                    overflow-hidden
+                                    transition-all duration-1000 ease-in-out
+                                    ${
+                                      isConnected && connectClicked
+                                        ? 'max-h-40 opacity-100 translate-y-0 mt-6'
+                                        : 'max-h-0 opacity-0 -translate-y-4'
+                                    }
+                                  `}
+                >
+                  <div className="relative bg-black border border-cyan-400 rounded-xl shadow-lg p-5 flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center mb-2">
+                        <Label
+                          htmlFor="email"
+                          className={`flex items-center gap-2 text-sm font-semibold ${
+                            theme === 'dark' ? 'text-white' : 'text-gray-900'
+                          }`}
+                        >
+                          Email
+                          <em className="text-xs font-normal not-italic text-gray-400">
+                            Optional
+                          </em>
+                        </Label>
+                        <Tooltip
+                          placement="top"
+                          title=" For Profile Management, Updates and Notifications facilities through email. User can modify or remove this anytime"
+                          arrow
+                        >
+                          <span
+                            className="w-4 h-4 flex items-center ml-2 justify-center text-cyan-400 border border-cyan-400 rounded-full font-bold p-2 cursor-pointer hover:opacity-70 transition-opacity"
+                            style={{
+                              fontFamily: 'algerian',
+                              backgroundColor:
+                                theme === 'dark' ? '#1a1a1a' : '#fff',
+                            }}
+                          >
+                            i
+                          </span>
+                        </Tooltip>
+                      </div>
+
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={formData.email}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            email: e.target.value,
+                          }))
+                        }
+                        style={{
+                          height: '50px',
+                          paddingLeft: '1rem',
+                          fontWeight: 600,
+                          letterSpacing: '0.03rem',
+                        }}
+                        className={`w-full rounded-lg mt-1 border ${
+                          theme === 'dark'
+                            ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500'
+                            : 'bg-white border-gray-300 text-black'
+                        } focus:ring-2 focus:ring-cyan-400 outline-none transition-all`}
+                      />
+                    </div>
+
+                    {/* Close Button */}
+                    <button
+                      type="button"
+                      aria-label="Close"
+                      onClick={closeEmailReq}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full hover:bg-red-300 text-red-900 text-xl font-bold grid place-items-center transition-all shadow-md"
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                </div>
               </div>
               <div>
                 <Button

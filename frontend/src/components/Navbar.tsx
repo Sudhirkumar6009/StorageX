@@ -22,22 +22,51 @@ const Navbar = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_PORT_URL;
 
   useEffect(() => {
-    if (isConnected && address) {
+    if (
+      isAuthenticated &&
+      ((authenticationType === 'metamask' && isConnected && address) ||
+        (authenticationType === 'google' && user?.email))
+    ) {
       fetchProfileData();
     }
-  }, [isConnected, address]);
+    // Optionally, clear profile image if not authenticated
+    if (!isAuthenticated) {
+      setProfileImage(null);
+    }
+  }, [isAuthenticated, authenticationType, isConnected, address, user]);
 
   const disconnectEmail = async () => {
     setOnConfirmDisconnect(() => logout);
     openDisconnect();
-  }
+  };
   const disconnectWalletthis = async () => {
     setOnConfirmDisconnect(() => logout);
     openDisconnect();
-  }
+  };
   const fetchProfileData = async () => {
     try {
-      const res = await fetch(`${backendUrl}/api/profile/show/${address}`);
+      let res;
+      if (authenticationType === 'metamask') {
+        if (!address || address.length !== 42 || !address.startsWith('0x')) {
+          throw new Error('Invalid wallet address');
+        }
+        res = await fetch(`${backendUrl}/api/profile/show/${address}`);
+      } else if (authenticationType === 'google') {
+        res = await fetch(
+          `${backendUrl}/api/profile/show/google/${user?.email}`
+        );
+      }
+      if (!res || !res.ok) {
+        const status = res ? res.status : 'unknown';
+        let errorText = `HTTP error! status: ${status}`;
+        if (res) {
+          try {
+            const errData = await res.text();
+            errorText += ` | Response: ${errData}`;
+          } catch {}
+        }
+        throw new Error(errorText);
+      }
       const data = await res.json();
 
       if (data.success) {
@@ -141,29 +170,27 @@ const Navbar = () => {
             )}
           </Avatar>
         </div>
-
         <div
           className={`
-        absolute top-1/3 right-0 -translate-y-1/3
-        flex items-center
-        transition-all duration-300
-        overflow-hidden
-        pointer-events-none
-        group-hover:pl-4 pl-0
-        h-14
-        bg-transparent
-          ${authenticationType === 'google' ? 'group-hover:w-60 w-0' : 'group-hover:w-48 w-0'}}
-      `}
+          absolute left-0 transform -translate-x-0 translate-y-3 opacity-0
+          group-hover:translate-y-5 group-hover:opacity-100
+          transition-all duration-300
+          flex items-center
+          pointer-events-none
+          bg-transparent
+          ${authenticationType === 'google' ? 'w-60' : 'w-48'}
+        `}
           style={{ zIndex: 10 }}
         >
-          <span className="text-[#00BFFF] text-sm font-mono bg-white dark:bg-gray-800 rounded px-2 py-1 shadow transition-opacity duration-300 opacity-0 group-hover:opacity-100">
-          {authenticationType === 'metamask'
-            ? address
-              ? `${address.slice(0, 6)}...${address.slice(-4)}`
-              : ''
-            : user?.email}
-        </span>
+          <span className="text-[#00BFFF] text-sm font-mono bg-white dark:bg-gray-800 rounded px-2 py-1 shadow">
+            {authenticationType === 'metamask'
+              ? address
+                ? `${address.slice(0, 6)}...${address.slice(-4)}`
+                : ''
+              : user?.email}
+          </span>
         </div>
+
         {open && (
           <div className="border-b absolute left-0 mt-5 w-48 bg-white dark:bg-gray-800 rounded shadow-lg z-50 flex flex-col border border-none">
             {children}
@@ -260,19 +287,19 @@ const Navbar = () => {
                     Option 4
                   </button>
                   {authenticationType === 'metamask' ? (
-                  <button
-                    onClick={disconnectWalletthis}
-                    className="block text-left w-full px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
-                  >
-                    Disconnect Wallet
-                  </button>
+                    <button
+                      onClick={disconnectWalletthis}
+                      className="block text-left w-full px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
+                    >
+                      Disconnect Wallet
+                    </button>
                   ) : (
-                  <button
-                    onClick={disconnectEmail}
-                    className="block text-left w-full px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
-                  >
-                    Sign out
-                  </button>
+                    <button
+                      onClick={disconnectEmail}
+                      className="block text-left w-full px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
+                    >
+                      Sign out
+                    </button>
                   )}
                 </DropdownMenu>
               )}
@@ -296,5 +323,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
-

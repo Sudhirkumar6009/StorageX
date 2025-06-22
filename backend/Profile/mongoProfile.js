@@ -17,10 +17,10 @@ const client = new MongoClient(process.env.ATLAS_URI, {
 router.post("/api/profile/update", async (req, res) => {
   try {
     await client.connect();
-    const { name, email, walletAddress, profileImage } = req.body;
+    const { name, email, address, profileImage } = req.body;
 
     const db = client.db("Profile");
-    const profilesCollection = db.collection("EmailUsersProfile");
+    const profilesCollection = db.collection("MetaMaskUsersProfile");
 
     const encryptedData = {
       name: encrypt(name),
@@ -29,7 +29,7 @@ router.post("/api/profile/update", async (req, res) => {
       updatedAt: new Date(),
     };
     const result = await profilesCollection.updateOne(
-      { walletAddress: walletAddress },
+      { walletAddress: address },
       { $set: encryptedData },
       { upsert: true }
     );
@@ -48,7 +48,6 @@ router.post("/api/profile/update", async (req, res) => {
   }
 });
 
-// Add better error handling for the profile endpoint
 router.get("/api/profile/show/:walletAddress", async (req, res) => {
   try {
     const { walletAddress } = req.params;
@@ -61,8 +60,8 @@ router.get("/api/profile/show/:walletAddress", async (req, res) => {
     }
 
     await client.connect();
-    const db = client.db("Users");
-    const profilesCollection = db.collection("Profile");
+    const db = client.db("Profile");
+    const profilesCollection = db.collection("MetaMaskUsersProfile");
 
     const result = await profilesCollection.findOne({ walletAddress });
 
@@ -70,6 +69,86 @@ router.get("/api/profile/show/:walletAddress", async (req, res) => {
       const decrypted = {
         name: result.name ? decrypt(result.name) : "",
         email: result.email ? decrypt(result.email) : "",
+        profileImage: result.profileImage ? decrypt(result.profileImage) : null,
+      };
+
+      res.json({
+        success: true,
+        data: decrypted,
+      });
+    } else {
+      res.json({
+        success: true,
+        data: {
+          name: "",
+          email: "",
+          profileImage: null,
+        },
+      });
+    }
+  } catch (error) {
+    console.error("Profile Fetch Error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+router.post("/api/profile/google/update", async (req, res) => {
+  try {
+    await client.connect();
+    const { name, email, profileImage } = req.body;
+
+    const db = client.db("Profile");
+    const profilesCollection = db.collection("EmailUsersProfile");
+
+    const encryptedData = {
+      name: encrypt(name),
+      profileImage: encrypt(profileImage),
+      updatedAt: new Date(),
+    };
+    const result = await profilesCollection.updateOne(
+      { email },
+      { $set: encryptedData },
+      { upsert: true }
+    );
+
+    res.json({
+      success: true,
+      message: "Encrypted profile stored successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Profile Update Error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+router.get("/api/profile/show/google/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Google Email is required",
+      });
+    }
+
+    await client.connect();
+    const db = client.db("Profile");
+    const profilesCollection = db.collection("EmailUsersProfile");
+
+    const result = await profilesCollection.findOne({ email });
+
+    if (result) {
+      const decrypted = {
+        name: result.name ? decrypt(result.name) : "",
+        email,
         profileImage: result.profileImage ? decrypt(result.profileImage) : null,
       };
 
