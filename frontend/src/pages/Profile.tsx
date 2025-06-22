@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { useProfile } from '../contexts/ProfileContext';
 import { useNavigate } from 'react-router-dom';
 import { OrbitProgress, Riple } from 'react-loading-indicators';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AvatarComponent = React.memo(
   ({ profileImage }: { profileImage: string | null }) => (
@@ -47,6 +48,7 @@ const Profile = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const { isAuthenticated } = useAuth();
   const [fetchloading, setFetchLoading] = useState(false);
   const [savingLoading, setSavingLoading] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -63,10 +65,10 @@ const Profile = () => {
   }, [address]);
 
   useEffect(() => {
-    if (!isConnected) {
+    if (!isAuthenticated) {
       navigate('/'); // Redirect to home or login page
     }
-  }, [isConnected, navigate]);
+  }, [isAuthenticated, navigate]);
 
   const fetchProfileData = async () => {
     setFetchLoading(true);
@@ -207,7 +209,7 @@ const Profile = () => {
     reader.readAsDataURL(file);
   };
 
-  if (!isConnected) {
+  if (!isAuthenticated) {
     return (
       <div
         className={`min-h-screen flex items-center justify-center transition-colors duration-200 ${
@@ -227,7 +229,7 @@ const Profile = () => {
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
               }`}
             >
-              Please connect your wallet to access your profile.
+              Authentication Failure. Login again !
             </p>
           </CardContent>
         </Card>

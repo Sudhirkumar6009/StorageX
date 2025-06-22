@@ -32,10 +32,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     },
     onDisconnect() {
       console.log('Disconnected!');
-      const protectedRoutes = ['/profile', '/dashboard'];
-      if (protectedRoutes.includes(location.pathname)) {
-        navigate('/');
-      }
     },
   });
 
