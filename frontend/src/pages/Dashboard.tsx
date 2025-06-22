@@ -421,7 +421,7 @@ const Dashboard = () => {
                       type="button"
                       size="sm"
                       onClick={uploadFile}
-                      disabled={loading || !isConnected}
+                      disabled={loading || !isAuthenticated}
                       className={`h-10 px-4 py-2 ${
                         theme === 'dark'
                           ? 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-black'
