@@ -10,7 +10,6 @@ import deleteFile from "./Filebase/deleteFile.js";
 import uploadFile from "./Filebase/uploadFile.js";
 import cidMatchingMongo from "./Mongo/cidMatchingMongo.js";
 import googleAccount from "./Signin/googleAccount.js";
-import cors from "cors";
 
 dotenv.config({ path: "./.env" });
 
@@ -22,13 +21,13 @@ app.use(
       "http://localhost:8080",
       "http://localhost:3000",
     ],
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
   })
 );
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
 app.use(express.json());
 app.use(mongoPing);
 app.use(mongoProfile);
