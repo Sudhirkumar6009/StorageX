@@ -32,6 +32,12 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     },
   });
 
+  // Always provide uppercase address for MetaMask
+  const normalizedAddress =
+    authenticationType === 'metamask' && address
+      ? address.toUpperCase()
+      : address;
+
   const effectiveConnection =
     authenticationType === 'google' ? false : isConnected;
   const connectWallet = async () => {
@@ -60,7 +66,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <Web3Context.Provider
       value={{
-        address,
+        address: normalizedAddress, // Always uppercase for MetaMask
         isConnected: effectiveConnection,
         connectWallet,
         disconnectWallet, // Now passes the actual disconnect function

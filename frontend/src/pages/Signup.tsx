@@ -118,7 +118,7 @@ const Signup = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: formData.email,
-            Wallet: walletAddress.toUpperCase(), // Always send as Wallet
+            Wallet: walletAddress, // Always send as Wallet
           }),
         }
       );

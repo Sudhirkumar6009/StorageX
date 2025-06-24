@@ -100,7 +100,7 @@ const Login = () => {
     } else {
       url = `${
         import.meta.env.VITE_BACKEND_PORT_URL
-      }/api/profile/show/${addressOrEmail.toUpperCase()}`;
+      }/api/profile/show/${addressOrEmail}`;
     }
     try {
       const res = await fetch(url);
@@ -138,7 +138,7 @@ const Login = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ address: loginAddress.toUpperCase() }),
+          body: JSON.stringify({ address: loginAddress }),
         }
       );
       const data = await res.json();

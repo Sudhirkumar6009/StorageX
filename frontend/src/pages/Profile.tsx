@@ -101,9 +101,7 @@ const Profile = () => {
         ) {
           throw new Error('Invalid wallet address');
         }
-        res = await fetch(
-          `${backendUrl}/api/profile/show/${selectionAddress.toUpperCase()}`
-        );
+        res = await fetch(`${backendUrl}/api/profile/show/${selectionAddress}`);
       } else if (authenticationType === 'google') {
         res = await fetch(
           `${backendUrl}/api/profile/show/google/${user?.email}`
@@ -162,7 +160,7 @@ const Profile = () => {
       if (authenticationType === 'metamask') {
         formData.append('name', name);
         formData.append('email', email);
-        formData.append('walletAddress', selectionAddress.toUpperCase());
+        formData.append('walletAddress', selectionAddress);
         formData.append('profileImage', profileImage);
         res = await fetch(`${backendUrl}/api/profile/update`, {
           method: 'POST',
@@ -172,14 +170,14 @@ const Profile = () => {
           body: JSON.stringify({
             name,
             email,
-            address: selectionAddress.toUpperCase(),
+            address: selectionAddress,
             profileImage,
           }),
         });
       } else if (authenticationType === 'walletConnect') {
         formData.append('name', name);
         formData.append('email', email);
-        formData.append('walletAddress', selectionAddress.toUpperCase());
+        formData.append('walletAddress', selectionAddress);
         formData.append('profileImage', profileImage);
         res = await fetch(`${backendUrl}/api/profile/update`, {
           method: 'POST',
@@ -189,7 +187,7 @@ const Profile = () => {
           body: JSON.stringify({
             name,
             email,
-            address: selectionAddress.toUpperCase(),
+            address: selectionAddress,
             profileImage,
           }),
         });

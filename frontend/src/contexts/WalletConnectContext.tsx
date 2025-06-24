@@ -41,7 +41,7 @@ export const WalletConnectProviderComponent: React.FC<{
           if (ethProvider.session) {
             await ethProvider.enable();
             setProvider(ethProvider);
-            setAccount(ethProvider.accounts[0]);
+            setAccount(ethProvider.accounts[0]?.toUpperCase() || null);
             setIsConnected(true);
 
             // Set up disconnect handler
@@ -81,7 +81,7 @@ export const WalletConnectProviderComponent: React.FC<{
 
       await ethProvider.enable();
       setProvider(ethProvider);
-      setAccount(ethProvider.accounts[0]);
+      setAccount(ethProvider.accounts[0]?.toUpperCase() || null);
       setIsConnected(true);
 
       ethProvider.on('disconnect', () => {

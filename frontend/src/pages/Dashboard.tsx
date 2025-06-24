@@ -78,24 +78,41 @@ const Dashboard = () => {
   const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchProfile(metamaskAddress);
-      fetchCids();
-    }
-  }, [isAuthenticated, metamaskAddress]);
+    const fetchAll = async () => {
+      if (!isAuthenticated) return;
 
-  useEffect(() => {
-    if (isAuthenticated && cids.length > 0) {
-      fetchFilebaseList();
-    }
-  }, [isAuthenticated, metamaskAddress, cids.join(',')]);
+      let addressToUse = '';
+      if (authenticationType === 'metamask') {
+        addressToUse = metamaskAddress;
+      } else if (authenticationType === 'walletConnect') {
+        addressToUse = wcAccount;
+      } else if (authenticationType === 'google') {
+        addressToUse = user?.email;
+      }
+
+      if (!addressToUse) return;
+
+      await fetchProfile(addressToUse);
+      await fetchCids();
+      setTimeout(() => {
+        fetchFilebaseList();
+      }, 0);
+    };
+    fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isAuthenticated,
+    metamaskAddress,
+    wcAccount,
+    user?.email,
+    authenticationType,
+  ]);
 
   const fetchCids = async () => {
     setError('');
     setCids([]);
     try {
       let res;
-      console.log('Authentication Type:', authenticationType);
       if (authenticationType === 'metamask') {
         res = await fetch(
           `${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetch_cids`,
@@ -124,28 +141,42 @@ const Dashboard = () => {
           }
         );
       } else {
-        setError('Unknown authentication type');
+        setError('');
         return;
       }
       const data = await res.json();
       if (data.success) {
         setCids(data.cids);
+      } else if (data.error && data.error.toLowerCase().includes('no files')) {
+        // Don't show error for "no files found"
+        setCids([]);
+        setError('');
+      } else if (data.error) {
+        setError(data.error);
       } else {
-        setError('Something went wrong');
+        setError('');
       }
     } catch (err) {
       setError('Error fetching CIDs');
     }
   };
 
-  const fetchProfile = async (address: string) => {
+  const fetchProfile = async (addressOrEmail: string) => {
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/profile/show/${address}`
-      );
+      let url = '';
+      if (authenticationType === 'google') {
+        url = `${
+          import.meta.env.VITE_BACKEND_PORT_URL
+        }/api/profile/show/google/${addressOrEmail}`;
+      } else {
+        url = `${
+          import.meta.env.VITE_BACKEND_PORT_URL
+        }/api/profile/show/${addressOrEmail}`;
+      }
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success && data.data) {
-        setProfile({ address: data.data.address || address });
+        setProfile({ address: data.data.address || addressOrEmail });
       } else {
         setProfile(null);
       }
@@ -170,8 +201,13 @@ const Dashboard = () => {
       const data = await res.json();
       if (data.success) {
         setFileList(data.files);
+      } else if (data.error && data.error.toLowerCase().includes('no files')) {
+        setFileList([]);
+        setError('');
+      } else if (data.error) {
+        setError(data.error);
       } else {
-        setError(data.error || 'Unknown error');
+        setError('');
       }
     } catch (err) {
       setError((err as Error).message);
@@ -235,7 +271,7 @@ const Dashboard = () => {
         }
 
         formData.append('file', file);
-        formData.append('wallet', wcAccount.toUpperCase());
+        formData.append('wallet', wcAccount);
         console.log('Uploading with WalletConnect wallet:', wcAccount);
 
         res = await fetch(
@@ -419,15 +455,19 @@ const Dashboard = () => {
     .filter((file) => cids.includes(file.cid))
     .reduce((sum, file) => sum + (Number(file.size) || 0), 0);
 
-  // Format size for display
   const formatSize = (size: number) => {
-    if (size > 1024 * 1024) {
-      return `${(size / (1024 * 1024)).toFixed(2)} MB`;
-    } else if (size > 1024) {
+    if (size >= 1024 ** 4) {
+      return `${(size / 1024 ** 4).toFixed(2)} TB`;
+    } else if (size >= 1024 ** 3) {
+      return `${(size / 1024 ** 3).toFixed(2)} GB`;
+    } else if (size >= 1024 ** 2) {
+      return `${(size / 1024 ** 2).toFixed(2)} MB`;
+    } else if (size >= 1024) {
       return `${(size / 1024).toFixed(2)} KB`;
     }
     return `${size} B`;
   };
+
   return (
     <div
       className={`min-h-screen transition-colors duration-200 ${
@@ -660,25 +700,21 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {fileList.length === 0 ? (
+            {fileList.length === 0 && cids.length > 0 ? (
               <div>No files uploaded yet.</div>
             ) : (
               <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
                 {fileList
                   .filter((file) => cids.includes(file.cid))
                   .map((file, idx) => {
-                    const fileType = getFileType(file.key); // Use your existing getFileType function
+                    const fileType = getFileType(file.key);
                     return (
                       <FileBlock
                         key={file.key}
                         id={String(idx)}
                         name={file.key}
-                        size={
-                          file.size
-                            ? `${(file.size / 1024).toFixed(2)} KB`
-                            : 'N/A'
-                        }
-                        type={fileType} // Pass the actual file type instead of null
+                        size={file.size ? formatSize(Number(file.size)) : 'N/A'}
+                        type={fileType}
                         onView={() => handleView(file)}
                         thumbnail={`https://cooperative-salmon-galliform.myfilebase.com/ipfs/${file.cid}`}
                         onDelete={() => {

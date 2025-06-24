@@ -59,8 +59,6 @@ router.get("/api/profile/show/:walletAddress", async (req, res) => {
       });
     }
 
-    walletAddress = walletAddress.toUpperCase(); // Always uppercase
-
     await client.connect();
     const db = client.db("Profile");
     const profilesCollection = db.collection("WalletUsersProfile");
