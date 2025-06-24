@@ -138,8 +138,7 @@ const Login = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          // Always send uppercase address
-          body: JSON.stringify({ address: loginAddress.toUpperCase() }),
+          body: JSON.stringify({ address: loginAddress }),
         }
       );
       const data = await res.json();

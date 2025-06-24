@@ -46,17 +46,12 @@ const AvatarComponent = React.memo(
 const Profile = () => {
   const { theme } = useTheme();
   const { address, isConnected } = useWeb3();
+  const { account: wcAccount, isConnected: wcIsConnected } = useWalletConnect();
+  const { isAuthenticated, authenticationType, user } = useAuth();
+  const [fetchloading, setFetchLoading] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
-  const {
-    connectWalletConnect,
-    disconnectWalletConnect,
-    account: wcAccount,
-    isConnected: wcIsConnected,
-  } = useWalletConnect();
-  const { isAuthenticated, authenticationType, user } = useAuth();
-  const [fetchloading, setFetchLoading] = useState(false);
   const [savingLoading, setSavingLoading] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -66,19 +61,29 @@ const Profile = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_PORT_URL;
 
   const selectionAddress =
-    (authenticationType === 'metamask' && address) ||
-    (authenticationType === 'walletConnect' && wcAccount) ||
-    (authenticationType === 'google' && user?.email);
+    authenticationType === 'metamask'
+      ? address
+      : authenticationType === 'walletConnect'
+      ? wcAccount
+      : authenticationType === 'google'
+      ? user?.email
+      : '';
 
   useEffect(() => {
     if (
-      (isAuthenticated && authenticationType === 'metamask') ||
-      authenticationType === 'walletConnect' ||
-      authenticationType === 'google'
+      (authenticationType === 'metamask' &&
+        address &&
+        address.length === 42 &&
+        address.startsWith('0x')) ||
+      (authenticationType === 'walletConnect' &&
+        wcAccount &&
+        wcAccount.length === 42 &&
+        wcAccount.startsWith('0x')) ||
+      (authenticationType === 'google' && user?.email)
     ) {
       fetchProfileData();
     }
-  }, [isAuthenticated, authenticationType, address, wcAccount, user?.email]);
+  }, [authenticationType, address, wcAccount, user?.email]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -90,47 +95,36 @@ const Profile = () => {
     setFetchLoading(true);
     try {
       let res;
-      console.log('Fetching profile data for:', selectionAddress);
       if (
         authenticationType === 'metamask' ||
         authenticationType === 'walletConnect'
       ) {
-        console.log('Using address:', selectionAddress);
-        // Validate address format
         if (
           !selectionAddress ||
           selectionAddress.length !== 42 ||
-          !(
-            selectionAddress.startsWith('0x') ||
-            selectionAddress.startsWith('0X')
-          )
+          !selectionAddress.startsWith('0x')
         ) {
           setFetchLoading(false);
-          console.error('Invalid address format:', selectionAddress);
+          return; // Don't throw, just return
+        }
+        res = await fetch(`${backendUrl}/api/profile/show/${selectionAddress}`);
+      } else if (authenticationType === 'google') {
+        if (!user?.email) {
+          setFetchLoading(false);
           return;
         }
         res = await fetch(
-          `${backendUrl}/api/profile/show/${selectionAddress.toUpperCase()}`
-        );
-      } else if (authenticationType === 'google') {
-        res = await fetch(
           `${backendUrl}/api/profile/show/google/${user?.email}`
         );
-        console.log('Using email:', user?.email);
       }
+
       if (!res.ok) {
-        console.error(
-          'Failed to fetch profile data:',
-          res.status,
-          res.statusText
-        );
-        console.error('HTTP error:', res.status, res.statusText);
         throw new Error(`HTTP error! status: ${res.status}`);
       }
       const data = await res.json();
 
       if (data.success) {
-        console.log('Profile data:', data.data);
+        console.log('Decrypted Profile Data:', data.data);
         setName(data.data.name || '');
         setEmail(data.data.email || '');
         if (data.data.profileImage) {
@@ -148,11 +142,11 @@ const Profile = () => {
         description: err.message || 'Failed to load profile data',
         variant: 'destructive',
       });
+      // Clear form data on error
       setName('');
       setEmail('');
       setProfileImage(null);
       updateGlobalProfileImage(null);
-      setFetchLoading(false);
     }
   };
 

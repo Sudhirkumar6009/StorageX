@@ -19,32 +19,51 @@ const Navbar = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [mongoStatus, setMongoStatus] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const { globalProfileImage } = useProfile();
-  const {
-    connectWalletConnect,
-    disconnectWalletConnect,
-    account: wcAccount,
-    isConnected: wcIsConnected,
-  } = useWalletConnect();
+  const { globalProfileImage, updateGlobalProfileImage } = useProfile();
+  const { account: wcAccount, isConnected: wcIsConnected } = useWalletConnect();
   const backendUrl = import.meta.env.VITE_BACKEND_PORT_URL;
 
   useEffect(() => {
-    if (
-      isAuthenticated &&
-      ((authenticationType === 'metamask' && isConnected && address) ||
-        (authenticationType === 'google' && user?.email))
-    ) {
-      fetchProfileData();
-    }
-    if (!isAuthenticated) {
-      setProfileImage(null);
-    }
-  }, [isAuthenticated, authenticationType, isConnected, address, user]);
+    const loadProfile = async () => {
+      if (isAuthenticated) {
+        setTimeout(async () => {
+          try {
+            await fetchProfileData();
+          } catch (err) {
+            console.error('Error loading profile on mount:', err);
+          }
+        }, 100);
+      } else {
+        setProfileImage(null);
+        updateGlobalProfileImage(null);
+      }
+    };
+
+    loadProfile();
+  }, [
+    isAuthenticated,
+    authenticationType,
+    address,
+    wcAccount,
+    wcIsConnected,
+    isConnected,
+    user?.email,
+  ]);
 
   const disconnectEmail = async () => {
     setOnConfirmDisconnect(() => logout);
     openDisconnect();
   };
+  const finalAddress = (() => {
+    if (authenticationType === 'metamask' && address) {
+      return address;
+    } else if (authenticationType === 'walletConnect' && wcAccount) {
+      return wcAccount;
+    } else if (authenticationType === 'google' && user?.email) {
+      return user.email;
+    }
+    return '';
+  })();
   const disconnectWalletthis = async () => {
     setOnConfirmDisconnect(() => logout);
     openDisconnect();
@@ -56,15 +75,24 @@ const Navbar = () => {
         authenticationType === 'metamask' ||
         authenticationType === 'walletConnect'
       ) {
-        if (!address || address.length !== 42 || !address.startsWith('0x')) {
-          throw new Error('Invalid wallet address');
+        // Check if finalAddress exists and is valid
+        if (!finalAddress) {
+          console.log('No wallet address available');
+          return;
         }
-        res = await fetch(`${backendUrl}/api/profile/show/${address}`);
+        res = await fetch(`${backendUrl}/api/profile/show/${finalAddress}`);
       } else if (authenticationType === 'google') {
+        if (!user?.email) {
+          console.log('No email available');
+          return;
+        }
         res = await fetch(
-          `${backendUrl}/api/profile/show/google/${user?.email}`
+          `${backendUrl}/api/profile/show/google/${user.email}`
         );
+      } else {
+        return; // Exit early if no valid auth type
       }
+
       if (!res || !res.ok) {
         const status = res ? res.status : 'unknown';
         let errorText = `HTTP error! status: ${status}`;
@@ -79,7 +107,6 @@ const Navbar = () => {
       const data = await res.json();
 
       if (data.success) {
-        console.log('Decrypted Profile Data:', data.data);
         if (data.data.profileImage) {
           setProfileImage(data.data.profileImage);
         }

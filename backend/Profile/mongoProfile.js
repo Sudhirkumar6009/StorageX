@@ -58,7 +58,6 @@ router.get("/api/profile/show/:walletAddress", async (req, res) => {
         message: "Wallet address is required",
       });
     }
-
     await client.connect();
     const db = client.db("Profile");
     const profilesCollection = db.collection("WalletUsersProfile");

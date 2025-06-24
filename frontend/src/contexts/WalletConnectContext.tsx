@@ -119,7 +119,7 @@ export const WalletConnectProviderComponent: React.FC<{
       value={{
         connectWalletConnect,
         disconnectWalletConnect,
-        account,
+        account: account ? account.toUpperCase() : null,
         isConnected,
       }}
     >
