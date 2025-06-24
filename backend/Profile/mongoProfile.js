@@ -20,7 +20,7 @@ router.post("/api/profile/update", async (req, res) => {
     const { name, email, address, profileImage } = req.body;
 
     const db = client.db("Profile");
-    const profilesCollection = db.collection("MetaMaskUsersProfile");
+    const profilesCollection = db.collection("WalletUsersProfile");
 
     const encryptedData = {
       name: encrypt(name),
@@ -29,7 +29,7 @@ router.post("/api/profile/update", async (req, res) => {
       updatedAt: new Date(),
     };
     const result = await profilesCollection.updateOne(
-      { walletAddress: address },
+      { Wallet: address },
       { $set: encryptedData },
       { upsert: true }
     );
@@ -50,7 +50,7 @@ router.post("/api/profile/update", async (req, res) => {
 
 router.get("/api/profile/show/:walletAddress", async (req, res) => {
   try {
-    const { walletAddress } = req.params;
+    let { walletAddress } = req.params;
 
     if (!walletAddress) {
       return res.status(400).json({
@@ -59,11 +59,14 @@ router.get("/api/profile/show/:walletAddress", async (req, res) => {
       });
     }
 
+    walletAddress = walletAddress.toUpperCase(); // Always uppercase
+
     await client.connect();
     const db = client.db("Profile");
-    const profilesCollection = db.collection("MetaMaskUsersProfile");
+    const profilesCollection = db.collection("WalletUsersProfile");
 
-    const result = await profilesCollection.findOne({ walletAddress });
+    // FIX: Use Wallet as the key, not walletAddress
+    const result = await profilesCollection.findOne({ Wallet: walletAddress });
 
     if (result) {
       const decrypted = {

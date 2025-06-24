@@ -16,6 +16,9 @@ import axios from 'axios';
 import { X } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { Riple } from 'react-loading-indicators';
+import { useWalletConnect } from '../contexts/WalletConnectContext';
+import { Smartphone } from 'lucide-react';
+import { useProfile } from '@/contexts/ProfileContext';
 
 const Login = () => {
   const { theme } = useTheme();
@@ -24,6 +27,12 @@ const Login = () => {
   const { login, isAuthenticated, authenticationType } = useAuth();
   const [fetchloading, setFetchLoading] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const {
+    connectWalletConnect,
+    disconnectWalletConnect,
+    account: wcAccount,
+    isConnected: wcIsConnected,
+  } = useWalletConnect();
   const [connectClicked, setConnectClicked] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -34,6 +43,7 @@ const Login = () => {
     setConnectClicked(false);
     setFormData({ email: '' });
   };
+
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -76,20 +86,51 @@ const Login = () => {
     },
   });
 
-  const handleLogin = async () => {
-    try {
-      if (!isConnected) {
-        toast({
-          title: 'Select to Continue',
-          description:
-            'Please connect your MetaMask wallet or continue with Google.',
-          variant: 'destructive',
-          duration: 3000,
-        });
-        return;
-      }
-      setFetchLoading(true);
+  const { updateGlobalProfileImage } = useProfile();
 
+  const fetchAndSetProfileImage = async (
+    addressOrEmail: string,
+    type: string
+  ) => {
+    let url = '';
+    if (type === 'google') {
+      url = `${
+        import.meta.env.VITE_BACKEND_PORT_URL
+      }/api/profile/show/google/${addressOrEmail}`;
+    } else {
+      url = `${
+        import.meta.env.VITE_BACKEND_PORT_URL
+      }/api/profile/show/${addressOrEmail.toUpperCase()}`;
+    }
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.success && data.data && data.data.profileImage) {
+        updateGlobalProfileImage(data.data.profileImage);
+      } else {
+        updateGlobalProfileImage(null);
+      }
+    } catch {
+      updateGlobalProfileImage(null);
+    }
+  };
+
+  const handleLogin = async () => {
+    const loginAddress = wcIsConnected ? wcAccount : address;
+
+    if (!loginAddress) {
+      toast({
+        title: 'Select to Continue',
+        description:
+          'Please connect your MetaMask or WalletConnect wallet or continue with Google.',
+        variant: 'destructive',
+        duration: 3000,
+      });
+      return;
+    }
+    setFetchLoading(true);
+
+    try {
       const res = await fetch(
         `${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetchUser`,
         {
@@ -97,19 +138,27 @@ const Login = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ address }),
+          body: JSON.stringify({ address: loginAddress.toUpperCase() }),
         }
       );
       const data = await res.json();
       if (data.success) {
-        if (address) {
-          await login(address, 'metamask');
+        if (loginAddress) {
+          await login(
+            loginAddress,
+            wcIsConnected ? 'walletConnect' : 'metamask'
+          );
+          // Fetch and set profile image
+          await fetchAndSetProfileImage(
+            loginAddress,
+            wcIsConnected ? 'walletConnect' : 'metamask'
+          );
         }
         setFetchLoading(false);
         toast({
           title: 'Login Successful',
           description: `Welcome back, ${
-            address.slice(0, 6) + '...' + address.slice(-5) || 'User'
+            loginAddress.slice(0, 6) + '...' + loginAddress.slice(-5) || 'User'
           }`,
         });
         navigate('/dashboard');
@@ -164,129 +213,106 @@ const Login = () => {
           <CardContent>
             <form className="space-y-4">
               <div>
-                <Button
-                  variant="outline"
-                  style={{
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    height: '50px',
-                  }}
-                  className={`w-full text-lg px-8 py-2 ${
-                    theme === 'dark'
-                      ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
-                      : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
-                  } ${
-                    isConnected || connecting
-                      ? 'opacity-50 cursor-not-allowed'
-                      : ''
-                  }`}
-                  onClick={async () => {
-                    setConnecting(true);
-                    try {
-                      await connectWallet();
-                      !isConnected && setConnectClicked(true);
-                    } finally {
-                      setConnecting(false);
-                    }
-                  }}
-                  disabled={isConnected || connecting || isAuthenticated}
-                  type="button"
-                >
-                  {isConnected
-                    ? 'MetaMask Connected'
-                    : connecting
-                    ? 'Connecting...'
-                    : 'Connect MetaMask'}
-                  <Avatar className="w-6 h-6 mt-1 ml-1 rounded-full">
-                    <AvatarFallback className="bg-transparent rounded-full">
-                      <img
-                        src="https://i.ibb.co/n4y03Fs/Metamask-NZ-Crypto-wallet.png"
-                        alt="Metamask"
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-                <div
-                  className={`
-                                    w-full
-                                    overflow-hidden
-                                    transition-all duration-1000 ease-in-out
-                                    ${
-                                      isConnected && connectClicked
-                                        ? 'max-h-40 opacity-100 translate-y-0 mt-6'
-                                        : 'max-h-0 opacity-0 -translate-y-4'
-                                    }
-                                  `}
-                >
-                  <div className="relative bg-black border border-cyan-400 rounded-xl shadow-lg p-5 flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center mb-2">
-                        <Label
-                          htmlFor="email"
-                          className={`flex items-center gap-2 text-sm font-semibold ${
-                            theme === 'dark' ? 'text-white' : 'text-gray-900'
-                          }`}
-                        >
-                          Email
-                          <em className="text-xs font-normal not-italic text-gray-400">
-                            Optional
-                          </em>
-                        </Label>
-                        <Tooltip
-                          placement="top"
-                          title=" For Profile Management, Updates and Notifications facilities through email. User can modify or remove this anytime"
-                          arrow
-                        >
-                          <span
-                            className="w-4 h-4 flex items-center ml-2 justify-center text-cyan-400 border border-cyan-400 rounded-full font-bold p-2 cursor-pointer hover:opacity-70 transition-opacity"
-                            style={{
-                              fontFamily: 'algerian',
-                              backgroundColor:
-                                theme === 'dark' ? '#1a1a1a' : '#fff',
-                            }}
-                          >
-                            i
-                          </span>
-                        </Tooltip>
-                      </div>
-
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        value={formData.email}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
-                        style={{
-                          height: '50px',
-                          paddingLeft: '1rem',
-                          fontWeight: 600,
-                          letterSpacing: '0.03rem',
-                        }}
-                        className={`w-full rounded-lg mt-1 border ${
-                          theme === 'dark'
-                            ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500'
-                            : 'bg-white border-gray-300 text-black'
-                        } focus:ring-2 focus:ring-cyan-400 outline-none transition-all`}
-                      />
-                    </div>
-
-                    {/* Close Button */}
+                {/* MetaMask Connect Button */}
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      height: '50px',
+                    }}
+                    className={`w-full text-lg px-8 py-2 ${
+                      theme === 'dark'
+                        ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
+                        : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
+                    } ${
+                      isConnected || connecting
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
+                    }`}
+                    onClick={async () => {
+                      setConnecting(true);
+                      try {
+                        await connectWallet();
+                        !isConnected && setConnectClicked(true);
+                      } finally {
+                        setConnecting(false);
+                      }
+                    }}
+                    disabled={isConnected || connecting || isAuthenticated}
+                    type="button"
+                  >
+                    {isConnected
+                      ? 'MetaMask Connected'
+                      : connecting
+                      ? 'Connecting...'
+                      : 'Connect MetaMask'}
+                    <Avatar className="w-6 h-6 mt-1 ml-1 rounded-full">
+                      <AvatarFallback className="bg-transparent rounded-full">
+                        <img
+                          src="https://i.ibb.co/n4y03Fs/Metamask-NZ-Crypto-wallet.png"
+                          alt="Metamask"
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                  {isConnected && (
                     <button
                       type="button"
-                      aria-label="Close"
-                      onClick={closeEmailReq}
-                      className="absolute top-2 right-2 w-7 h-7 rounded-full hover:bg-red-300 text-red-900 text-xl font-bold grid place-items-center transition-all shadow-md"
+                      onClick={() => disconnectWallet()}
+                      className="absolute top-1/2 right-3 transform -translate-y-1/2 w-6 h-6 p-1 bg-red-600 transparent hover:bg-red-700 text-white rounded flex items-center justify-center transition-all duration-200 shadow-md"
+                      title="Disconnect wallet"
                     >
-                      <X size={15} />
+                      <X size={13} />
                     </button>
-                  </div>
+                  )}
+                </div>
+                {/* WalletConnect Connect Button */}
+                <div className="relative mt-4">
+                  <Button
+                    variant="outline"
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      height: '50px',
+                    }}
+                    className={`w-full text-lg px-8 py-2 ${
+                      theme === 'dark'
+                        ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
+                        : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
+                    } ${wcIsConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    onClick={connectWalletConnect}
+                    disabled={wcIsConnected || isAuthenticated}
+                    type="button"
+                  >
+                    <Avatar className="w-6 h-6 mt-1 ml-1 rounded-full">
+                      <AvatarFallback className="bg-transparent rounded-full">
+                        <img
+                          src="https://i.ibb.co/rKKXhDtv/wallet-Connect.png"
+                          alt="WalletConnect"
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      </AvatarFallback>
+                    </Avatar>
+                    {wcIsConnected ? 'Wallet Connected' : 'Connect Wallet'}
+                  </Button>
+                  {wcIsConnected && (
+                    <button
+                      type="button"
+                      onClick={disconnectWalletConnect}
+                      className="absolute top-1/3 right-3 transform -translate-y-1/2 w-6 h-6 p-1 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-all duration-200 shadow-md"
+                      title="Disconnect WalletConnect"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                  {wcIsConnected && wcAccount && (
+                    <div className="text-xs mt-2 text-[#00BFFF] break-all">
+                      Connected: {wcAccount}
+                    </div>
+                  )}
                 </div>
               </div>
               <div>
@@ -328,33 +354,43 @@ const Login = () => {
               </div>
               <Button
                 type="button"
-                disabled={isAuthenticated}
-                onClick={handleLogin}
+                onClick={isConnected || wcIsConnected ? handleLogin : undefined}
+                disabled={(!isConnected && !wcIsConnected) || isAuthenticated}
+                variant="outline"
                 style={{
                   marginTop: '3rem',
                   height: '75px',
                   fontSize: '1.2rem',
                 }}
-                className={`w-full bg-black rounded-lg border transition-all duration-300 ease-in-out
+                className={`w-full rounded-lg border transition-all duration-300 ease-in-out
                   hover:scale-105 hover:shadow-lg 
                   ${
                     theme === 'dark'
                       ? 'border-[#0091c2] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-black'
                       : 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-white'
                   }
-                  ${!isConnected ? 'opacity-50 cursor-not-allowed' : ''}
+                  ${
+                    !isConnected && !wcIsConnected
+                      ? 'opacity-50 cursor-not-allowed'
+                      : ''
+                  }
                 `}
               >
                 {isAuthenticated
                   ? `Already Logged in with ${
-                      authenticationType === 'google' ? 'Google' : 'MetaMask'
+                      authenticationType === 'google'
+                        ? 'Google'
+                        : isConnected
+                        ? 'MetaMask'
+                        : wcIsConnected
+                        ? 'WalletConnect'
+                        : ''
                     }`
-                  : isLoading
-                  ? 'Signing in...'
-                  : 'Sign In'}
+                  : isConnected || wcIsConnected
+                  ? 'Login'
+                  : 'Select to Continue'}
               </Button>
             </form>
-
             <div className="mt-6 text-center">
               <p
                 className={`text-sm ${

@@ -13,6 +13,7 @@ import { useProfile } from '../contexts/ProfileContext';
 import { useNavigate } from 'react-router-dom';
 import { OrbitProgress, Riple } from 'react-loading-indicators';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWalletConnect } from '../contexts/WalletConnectContext';
 
 const AvatarComponent = React.memo(
   ({ profileImage }: { profileImage: string | null }) => (
@@ -48,6 +49,12 @@ const Profile = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const {
+    connectWalletConnect,
+    disconnectWalletConnect,
+    account: wcAccount,
+    isConnected: wcIsConnected,
+  } = useWalletConnect();
   const { isAuthenticated, authenticationType, user } = useAuth();
   const [fetchloading, setFetchLoading] = useState(false);
   const [savingLoading, setSavingLoading] = useState(false);
@@ -63,6 +70,8 @@ const Profile = () => {
       ? address
       : authenticationType === 'google'
       ? user?.email
+      : authenticationType === 'walletConnect'
+      ? wcAccount
       : '';
 
   useEffect(() => {
@@ -81,11 +90,20 @@ const Profile = () => {
     setFetchLoading(true);
     try {
       let res;
-      if (authenticationType === 'metamask') {
-        if (!address || address.length !== 42 || !address.startsWith('0x')) {
+      if (
+        authenticationType === 'metamask' ||
+        authenticationType === 'walletConnect'
+      ) {
+        if (
+          !selectionAddress ||
+          selectionAddress.length !== 42 ||
+          !selectionAddress.startsWith('0x')
+        ) {
           throw new Error('Invalid wallet address');
         }
-        res = await fetch(`${backendUrl}/api/profile/show/${address}`);
+        res = await fetch(
+          `${backendUrl}/api/profile/show/${selectionAddress.toUpperCase()}`
+        );
       } else if (authenticationType === 'google') {
         res = await fetch(
           `${backendUrl}/api/profile/show/google/${user?.email}`
@@ -144,7 +162,7 @@ const Profile = () => {
       if (authenticationType === 'metamask') {
         formData.append('name', name);
         formData.append('email', email);
-        formData.append('walletAddress', address);
+        formData.append('walletAddress', selectionAddress.toUpperCase());
         formData.append('profileImage', profileImage);
         res = await fetch(`${backendUrl}/api/profile/update`, {
           method: 'POST',
@@ -154,7 +172,24 @@ const Profile = () => {
           body: JSON.stringify({
             name,
             email,
-            address,
+            address: selectionAddress.toUpperCase(),
+            profileImage,
+          }),
+        });
+      } else if (authenticationType === 'walletConnect') {
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('walletAddress', selectionAddress.toUpperCase());
+        formData.append('profileImage', profileImage);
+        res = await fetch(`${backendUrl}/api/profile/update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            address: selectionAddress.toUpperCase(),
             profileImage,
           }),
         });
@@ -361,7 +396,8 @@ const Profile = () => {
                     }
                       `}
                   >
-                    {authenticationType === 'metamask'
+                    {authenticationType === 'metamask' ||
+                    authenticationType === 'walletConnect'
                       ? 'Wallet Address'
                       : 'Email Address'}
                   </Label>

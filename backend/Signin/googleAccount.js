@@ -1,8 +1,8 @@
-import express from 'express';
-import { MongoClient, ServerApiVersion } from 'mongodb';
-import dotenv from 'dotenv';
+import express from "express";
+import { MongoClient, ServerApiVersion } from "mongodb";
+import dotenv from "dotenv";
 
-dotenv.config({ path: './.env' });
+dotenv.config({ path: "./.env" });
 const router = express.Router();
 
 const client = new MongoClient(process.env.ATLAS_URI, {
@@ -13,17 +13,17 @@ const client = new MongoClient(process.env.ATLAS_URI, {
   },
 });
 
-router.post('/api/googleAccount', async (req, res) => {
+router.post("/api/googleAccount", async (req, res) => {
   try {
     await client.connect();
 
     const { email } = req.body;
     if (!email) {
-      return res.json({ success: false, message: 'Email is required' });
+      return res.json({ success: false, message: "Email is required" });
     }
 
-    const db = client.db('Accounts');
-    const addressesCollection = db.collection('EmailUsers');
+    const db = client.db("Accounts");
+    const addressesCollection = db.collection("EmailUsers");
 
     let user = await addressesCollection.findOne({ email });
     if (!user) {
@@ -39,10 +39,10 @@ router.post('/api/googleAccount', async (req, res) => {
     res.json({
       success: true,
       user,
-      message: user ? 'Logged in successfully' : 'Account created successfully',
+      message: user ? "Logged in successfully" : "Account created successfully",
     });
   } catch (error) {
-    console.error('Store Google User Error:', error);
+    console.error("Store Google User Error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

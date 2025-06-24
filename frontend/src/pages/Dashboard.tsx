@@ -12,6 +12,7 @@ import { useWeb3 } from '@/contexts/Web3Context';
 import FileBlock from '@/components/FileBlock';
 import FileModal from '@/components/FileModal';
 import { deleteFile } from './DashDemo';
+import { useWalletConnect } from '../contexts/WalletConnectContext';
 
 const bucket = 'storagex';
 const fileToDelete = 'IMG-20220803-WA0014.jpg';
@@ -44,6 +45,12 @@ const Dashboard = () => {
   const [file, setFile] = useState(null);
   const [cid, setCid] = useState('');
   const [loading, setLoading] = useState(false);
+  const {
+    connectWalletConnect,
+    disconnectWalletConnect,
+    account: wcAccount,
+    isConnected: wcIsConnected,
+  } = useWalletConnect();
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { address: metamaskAddress, isConnected } = useWeb3();
@@ -88,13 +95,23 @@ const Dashboard = () => {
     setCids([]);
     try {
       let res;
+      console.log('Authentication Type:', authenticationType);
       if (authenticationType === 'metamask') {
         res = await fetch(
           `${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetch_cids`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ MetaMask: metamaskAddress }),
+            body: JSON.stringify({ Wallet: metamaskAddress }),
+          }
+        );
+      } else if (authenticationType === 'walletConnect') {
+        res = await fetch(
+          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetch_cids`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Wallet: wcAccount }),
           }
         );
       } else if (authenticationType === 'google') {
@@ -106,6 +123,9 @@ const Dashboard = () => {
             body: JSON.stringify({ email: user?.email }),
           }
         );
+      } else {
+        setError('Unknown authentication type');
+        return;
       }
       const data = await res.json();
       if (data.success) {
@@ -181,13 +201,43 @@ const Dashboard = () => {
       alert('User Authentication failed');
       return;
     }
+
     setLoading(true);
     const formData = new FormData();
     let res;
+
     try {
       if (authenticationType === 'metamask') {
+        // Check if metamaskAddress is valid
+        if (!metamaskAddress) {
+          alert('MetaMask address is missing');
+          setLoading(false);
+          return;
+        }
+
         formData.append('file', file);
-        formData.append('metaMask', metamaskAddress);
+        formData.append('wallet', metamaskAddress);
+        console.log('Uploading with MetaMask wallet:', metamaskAddress);
+
+        res = await fetch(
+          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/upload`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+      } else if (authenticationType === 'walletConnect') {
+        // Check if wcAccount is valid
+        if (!wcAccount) {
+          alert('WalletConnect address is missing');
+          setLoading(false);
+          return;
+        }
+
+        formData.append('file', file);
+        formData.append('wallet', wcAccount);
+        console.log('Uploading with WalletConnect wallet:', wcAccount);
+
         res = await fetch(
           `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/upload`,
           {
@@ -196,8 +246,16 @@ const Dashboard = () => {
           }
         );
       } else if (authenticationType === 'google') {
+        // Your existing Google upload code...
+        if (!user?.email) {
+          alert('Google email is missing');
+          setLoading(false);
+          return;
+        }
+
         formData.append('file', file);
-        formData.append('email', user?.email || '');
+        formData.append('email', user.email || '');
+
         res = await fetch(
           `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/google/upload`,
           {
@@ -206,16 +264,22 @@ const Dashboard = () => {
           }
         );
       }
+
+      // Handle the response
       const data = await res.json();
       if (data.success) {
-        toast({ title: 'Upload successful', description: file.key });
+        toast({ title: 'Upload successful', description: file.name }); // Changed from file.key to file.name
         console.log('Actual File Name:', file.name);
         setFile(null);
         setFileName('');
-        await fetchFilebaseList();
+        await fetchCids(); // Fetch updated CIDs
+        await fetchFilebaseList(); // Update file list
       } else {
         alert('Upload failed: ' + (data.error || 'Unknown error'));
       }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Upload error: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -288,7 +352,20 @@ const Dashboard = () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              metaMask: metamaskAddress,
+              Wallet: metamaskAddress,
+              cid: file.cid,
+              fileName: file.key,
+            }),
+          }
+        );
+      } else if (authenticationType === 'walletConnect') {
+        res = await fetch(
+          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/filebase/delete`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              Wallet: wcAccount,
               cid: file.cid,
               fileName: file.key,
             }),
@@ -495,7 +572,7 @@ const Dashboard = () => {
                       theme === 'dark' ? 'text-white' : 'text-gray-900'
                     }
                   >
-                    MetaMask Address
+                    Wallet Address
                   </Label>
                   <p
                     style={{ letterSpacing: '0.1rem' }}
@@ -503,14 +580,16 @@ const Dashboard = () => {
                       theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                     }`}
                   >
-                    {authenticationType === 'metamask'
-                      ? metamaskAddress
-                        ? `${metamaskAddress.slice(
-                            0,
-                            6
-                          )}...${metamaskAddress.slice(-4)}`
-                        : 'Not Connected'
-                      : user?.email || 'Not Connected'}
+                    {authenticationType === 'metamask' && metamaskAddress
+                      ? `${metamaskAddress.slice(
+                          0,
+                          6
+                        )}...${metamaskAddress.slice(-4)}`
+                      : authenticationType === 'walletConnect' && wcAccount
+                      ? `${wcAccount.slice(0, 6)}...${wcAccount.slice(-4)}`
+                      : authenticationType === 'google' && user?.email
+                      ? user.email
+                      : ''}
                   </p>
                 </div>
                 <p></p>

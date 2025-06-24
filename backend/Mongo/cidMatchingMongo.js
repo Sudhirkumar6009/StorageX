@@ -1,8 +1,8 @@
-import express from 'express';
-import { MongoClient, ServerApiVersion } from 'mongodb';
-import dotenv from 'dotenv';
+import express from "express";
+import { MongoClient, ServerApiVersion } from "mongodb";
+import dotenv from "dotenv";
 
-dotenv.config({ path: './.env' });
+dotenv.config({ path: "./.env" });
 const router = express.Router();
 
 const client = new MongoClient(process.env.ATLAS_URI, {
@@ -13,56 +13,46 @@ const client = new MongoClient(process.env.ATLAS_URI, {
   },
 });
 
-router.post('/api/fetch_cids', async (req, res) => {
+router.post("/api/fetch_cids", async (req, res) => {
   try {
     await client.connect();
-    const { MetaMask } = req.body;
+    const { Wallet } = req.body;
 
-    if (!MetaMask) {
+    if (!Wallet) {
       return res.json({
         success: false,
-        message: 'MetaMask address is required',
+        message: "MetaMask address is required",
       });
     }
 
-    const db = client.db('Users');
-    const addressesCollection = db.collection('Accounts');
-    const user = await addressesCollection.findOne({ MetaMask });
+    const db = client.db("Accounts");
+    const addressesCollection = db.collection("WalletUsers");
+    const user = await addressesCollection.findOne({ Wallet });
 
     if (!user) {
       return res.json({
         success: false,
-        message: 'No user found for this MetaMask address',
+        message: "No user found for this Wallet address",
       });
     }
 
     let cids = [];
     if (Array.isArray(user.storage)) {
       cids = user.storage;
-    } else if (typeof user.storage === 'object' && user.storage !== null) {
+    } else if (typeof user.storage === "object" && user.storage !== null) {
       cids = Object.values(user.storage);
     }
 
     res.json({ success: true, cids });
   } catch (error) {
-    console.error('Fetch CIDs Error:', error);
+    console.error("Fetch CIDs Error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-
-
-
-
-
-
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
-
-router.post('/api/google/fetch_cids', async (req, res) => {
+router.post("/api/google/fetch_cids", async (req, res) => {
   try {
     await client.connect();
     const { email } = req.body;
@@ -70,31 +60,31 @@ router.post('/api/google/fetch_cids', async (req, res) => {
     if (!email) {
       return res.json({
         success: false,
-        message: 'Google address is required',
+        message: "Google address is required",
       });
     }
 
-    const db = client.db('Accounts');
-    const addressesCollection = db.collection('EmailUsers');
+    const db = client.db("Accounts");
+    const addressesCollection = db.collection("EmailUsers");
     const user = await addressesCollection.findOne({ email });
 
     if (!user) {
       return res.json({
         success: false,
-        message: 'No user found for this Google address',
+        message: "No user found for this Google address",
       });
     }
 
     let cids = [];
     if (Array.isArray(user.storage)) {
       cids = user.storage;
-    } else if (typeof user.storage === 'object' && user.storage !== null) {
+    } else if (typeof user.storage === "object" && user.storage !== null) {
       cids = Object.values(user.storage);
     }
 
     res.json({ success: true, cids });
   } catch (error) {
-    console.error('Fetch CIDs Error:', error);
+    console.error("Fetch CIDs Error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

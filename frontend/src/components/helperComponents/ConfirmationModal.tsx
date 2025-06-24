@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import { useDisconnect } from 'wagmi';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWalletConnect } from '@/contexts/WalletConnectContext';
 
 interface ModalContextType {
   showDisconnect: boolean;
@@ -12,23 +13,27 @@ interface ModalContextType {
 
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
 
-export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [showDisconnect, setShowDisconnect] = useState(false);
-  const [onConfirmDisconnect, setOnConfirmDisconnect] = useState<() => void>(() => () => {});
+  const [onConfirmDisconnect, setOnConfirmDisconnect] = useState<() => void>(
+    () => () => {}
+  );
 
   const openDisconnect = () => setShowDisconnect(true);
   const closeDisconnect = () => setShowDisconnect(false);
-  
+
   return (
     <ModalContext.Provider
-    value={{
+      value={{
         showDisconnect,
         openDisconnect,
         closeDisconnect,
         onConfirmDisconnect,
         setOnConfirmDisconnect,
       }}
-      >
+    >
       {children}
     </ModalContext.Provider>
   );
@@ -46,18 +51,21 @@ export const DisconnectConfirmModal: React.FC<{
   onCancel: () => void;
 }> = ({ open, onCancel }) => {
   const { authenticationType, logout } = useAuth();
-  const { disconnect } = useDisconnect(); 
+  const { disconnect } = useDisconnect();
+  const { disconnectWalletConnect } = useWalletConnect();
   if (!open) return null;
   const handleConfirm = () => {
     if (authenticationType === 'metamask') {
       disconnect();
       logout();
-    }
-    else if (authenticationType === 'google') {
+    } else if (authenticationType === 'walletConnect') {
+      disconnectWalletConnect();
       logout();
-  }
-  onCancel();
-}
+    } else if (authenticationType === 'google') {
+      logout();
+    }
+    onCancel();
+  };
   return (
     <div
       className="fixed inset-0 z-100 flex items-center justify-center bg-black bg-opacity-40"

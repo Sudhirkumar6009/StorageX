@@ -8,5 +8,10 @@
     "devDependencies": {
       "concurrently": "^8.0.0"
     }
+  },
+  "dependencies": {
+    "@reown/walletkit": "^1.2.7",
+    "@walletconnect/core": "^2.21.3",
+    "@walletconnect/utils": "^2.21.3"
   }
 }

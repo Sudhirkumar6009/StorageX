@@ -10,17 +10,23 @@ import { Navigate, useLocation } from 'react-router-dom';
 interface User {
   email: string;
   id: string;
-  loginMethod?: 'metamask' | 'google'; // Add login method tracking
+  loginMethod?: 'metamask' | 'google' | 'walletConnect'; // Add login method tracking
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, method: 'metamask' | 'google') => Promise<boolean>;
-  signup: (email: string, method: 'metamask' | 'google') => Promise<boolean>;
+  login: (
+    email: string,
+    method: 'metamask' | 'google' | 'walletConnect'
+  ) => Promise<boolean>;
+  signup: (
+    email: string,
+    method: 'metamask' | 'google' | 'walletConnect'
+  ) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
   authStatus: 'authenticated' | 'unauthenticated' | 'loading';
-  authenticationType: 'metamask' | 'google' | null;
+  authenticationType: 'metamask' | 'google' | 'walletConnect' | null;
   checkAuthStatus: () => Promise<boolean>;
 }
 
@@ -54,9 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loginMethod, setLoginMethod] = useState<'metamask' | 'google' | null>(
-    null
-  );
+  const [loginMethod, setLoginMethod] = useState<
+    'metamask' | 'google' | 'walletConnect' | null
+  >(null);
   const [authStatus, setAuthStatus] = useState<
     'loading' | 'authenticated' | 'unauthenticated'
   >('loading');
@@ -75,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [user, loginMethod]);
   const login = async (
     email: string,
-    method: 'metamask' | 'google'
+    method: 'metamask' | 'google' | 'walletConnect'
   ): Promise<boolean> => {
     try {
       setAuthStatus('loading');
@@ -101,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signup = async (
     email: string,
-    method: 'metamask' | 'google'
+    method: 'metamask' | 'google' | 'walletConnect'
   ): Promise<boolean> => {
     if (email) {
       setUser({
@@ -122,40 +128,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(parsedUser);
       setLoginMethod(parsedUser.loginMethod);
       setAuthStatus('authenticated');
-      // Check with backend for Google or MetaMask
-      if (parsedUser.loginMethod === 'google') {
-        fetch(`${import.meta.env.VITE_BACKEND_PORT_URL}/api/googleAccount`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: parsedUser.email }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (!data.success) {
-              logout();
-            }
-          })
-          .catch(() => {
-            logout();
-          });
-      } else if (parsedUser.loginMethod === 'metamask') {
-        fetch(`${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetchUser`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address: parsedUser.email }), // or parsedUser.address if you store it
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (!data.success) {
-              logout();
-            }
-          })
-          .catch(() => {
-            logout();
-          });
-      }
-    } else {
-      setAuthStatus('unauthenticated');
     }
   }, []);
 

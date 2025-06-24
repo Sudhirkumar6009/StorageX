@@ -1,8 +1,8 @@
-import express from 'express';
-import { MongoClient, ServerApiVersion } from 'mongodb';
-import dotenv from 'dotenv';
+import express from "express";
+import { MongoClient, ServerApiVersion } from "mongodb";
+import dotenv from "dotenv";
 
-dotenv.config({ path: './.env' });
+dotenv.config({ path: "./.env" });
 const router = express.Router();
 
 const client = new MongoClient(process.env.ATLAS_URI, {
@@ -13,34 +13,33 @@ const client = new MongoClient(process.env.ATLAS_URI, {
   },
 });
 
-router.post('/api/store-address', async (req, res) => {
+router.post("/api/store-address", async (req, res) => {
   try {
     await client.connect();
 
-    const { email, MetaMask } = req.body;
-    const db = client.db('Users');
-    const addressesCollection = db.collection('Accounts');
+    const { email, Wallet } = req.body;
+    const db = client.db("Accounts");
+    const addressesCollection = db.collection("WalletUsers");
 
-    if (!MetaMask) {
+    if (!Wallet) {
       return res.json({
         success: false,
-        message: 'MetaMask address is required',
+        message: "Wallet address is required",
       });
     }
 
-    const existingMetaMask = await addressesCollection.findOne({ MetaMask });
+    const existingMetaMask = await addressesCollection.findOne({ Wallet });
     if (existingMetaMask) {
       return res.json({
         success: false,
         exists: true,
-        message: 'Account already exists with this MetaMask address',
+        message: "Account already exists with this Wallet address",
       });
     }
 
     const newDoc = {
-      email: email || 'Not Provided',
-      MetaMask,
-      public: publicData, // always store public key
+      email: email || "Not Provided",
+      Wallet,
       updatedAt: new Date(),
       storage: [],
     };
@@ -50,10 +49,10 @@ router.post('/api/store-address', async (req, res) => {
     res.json({
       success: true,
       data: result,
-      message: 'Address stored successfully',
+      message: "Address stored successfully",
     });
   } catch (error) {
-    console.error('Store Address Error:', error);
+    console.error("Store Address Error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

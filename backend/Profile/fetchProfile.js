@@ -1,8 +1,8 @@
-import express from 'express';
-import { MongoClient, ServerApiVersion } from 'mongodb';
-import dotenv from 'dotenv';
+import express from "express";
+import { MongoClient, ServerApiVersion } from "mongodb";
+import dotenv from "dotenv";
 
-dotenv.config({ path: './.env' });
+dotenv.config({ path: "./.env" });
 const router = express.Router();
 
 const client = new MongoClient(process.env.ATLAS_URI, {
@@ -13,12 +13,12 @@ const client = new MongoClient(process.env.ATLAS_URI, {
   },
 });
 
-router.post('/api/fetchUser', async (req, res) => {
+router.post("/api/fetchUser", async (req, res) => {
   const { address } = req.body;
   await client.connect();
-  const db = client.db('Users');
-  const Collection = db.collection('Accounts');
-  const user = await Collection.findOne({ MetaMask: address });
+  const db = client.db("Accounts");
+  const Collection = db.collection("WalletUsers");
+  const user = await Collection.findOne({ Wallet: address });
   if (user) {
     return res.json({ success: true, profile: user });
   } else {

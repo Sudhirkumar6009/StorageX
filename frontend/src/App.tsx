@@ -20,7 +20,12 @@ import { mainnet, sepolia } from 'wagmi/chains';
 import { BackTopContext } from './contexts/BackTopContext.js';
 import Dashboard from './pages/Dashboard';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { ModalProvider, useModal, DisconnectConfirmModal } from './components/helperComponents/ConfirmationModal';
+import { WalletConnectProviderComponent } from './contexts/WalletConnectContext';
+import {
+  ModalProvider,
+  useModal,
+  DisconnectConfirmModal,
+} from './components/helperComponents/ConfirmationModal';
 
 const queryClient = new QueryClient();
 const wagmiConfig = createConfig({
@@ -35,10 +40,7 @@ const wagmiConfig = createConfig({
 const GlobalModals = () => {
   const { showDisconnect, closeDisconnect, onConfirmDisconnect } = useModal();
   return (
-    <DisconnectConfirmModal
-      open={showDisconnect}
-      onCancel={closeDisconnect}
-    />
+    <DisconnectConfirmModal open={showDisconnect} onCancel={closeDisconnect} />
   );
 };
 
@@ -51,42 +53,44 @@ const App = () => (
             <ThemeProvider>
               <ProfileProvider>
                 <AuthProvider>
-                  <ModalProvider>
-                    <GlobalModals />
-                    <Web3Provider>
-                      <Toaster />
-                      <Sonner />
-                      <div className="min-h-screen flex flex-col">
-                        <Navbar />
-                        <main className="flex-1 pt-16">
-                          <Routes>
-                            <Route path="/" element={<Index />} />
-                            <Route path="/login" element={<Login />} />
-                            <Route path="/signup" element={<Signup />} />
-                            <Route
-                              path="/dashboard"
-                              element={
-                                <ProtectedRoute>
-                                  <Dashboard />
-                                </ProtectedRoute>
-                              }
-                            />
-                            <Route
-                              path="/profile"
-                              element={
-                                <ProtectedRoute>
-                                  <Profile />
-                                </ProtectedRoute>
-                              }
-                            />
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                        </main>
-                        <Footer />
-                        <BackTopContext />
-                      </div>
-                    </Web3Provider>
-                  </ModalProvider>
+                  <WalletConnectProviderComponent>
+                    <ModalProvider>
+                      <GlobalModals />
+                      <Web3Provider>
+                        <Toaster />
+                        <Sonner />
+                        <div className="min-h-screen flex flex-col">
+                          <Navbar />
+                          <main className="flex-1 pt-16">
+                            <Routes>
+                              <Route path="/" element={<Index />} />
+                              <Route path="/login" element={<Login />} />
+                              <Route path="/signup" element={<Signup />} />
+                              <Route
+                                path="/dashboard"
+                                element={
+                                  <ProtectedRoute>
+                                    <Dashboard />
+                                  </ProtectedRoute>
+                                }
+                              />
+                              <Route
+                                path="/profile"
+                                element={
+                                  <ProtectedRoute>
+                                    <Profile />
+                                  </ProtectedRoute>
+                                }
+                              />
+                              <Route path="*" element={<NotFound />} />
+                            </Routes>
+                          </main>
+                          <Footer />
+                          <BackTopContext />
+                        </div>
+                      </Web3Provider>
+                    </ModalProvider>
+                  </WalletConnectProviderComponent>
                 </AuthProvider>
               </ProfileProvider>
             </ThemeProvider>

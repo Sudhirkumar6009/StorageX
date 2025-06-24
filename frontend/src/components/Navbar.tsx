@@ -8,6 +8,7 @@ import { useWeb3 } from '@/contexts/Web3Context';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useModal } from './helperComponents/ConfirmationModal';
 import { useProfile } from '../contexts/ProfileContext';
+import { useWalletConnect } from '../contexts/WalletConnectContext';
 
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
@@ -19,6 +20,12 @@ const Navbar = () => {
   const [mongoStatus, setMongoStatus] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const { globalProfileImage } = useProfile();
+  const {
+    connectWalletConnect,
+    disconnectWalletConnect,
+    account: wcAccount,
+    isConnected: wcIsConnected,
+  } = useWalletConnect();
   const backendUrl = import.meta.env.VITE_BACKEND_PORT_URL;
 
   useEffect(() => {
@@ -29,7 +36,6 @@ const Navbar = () => {
     ) {
       fetchProfileData();
     }
-    // Optionally, clear profile image if not authenticated
     if (!isAuthenticated) {
       setProfileImage(null);
     }
@@ -46,7 +52,10 @@ const Navbar = () => {
   const fetchProfileData = async () => {
     try {
       let res;
-      if (authenticationType === 'metamask') {
+      if (
+        authenticationType === 'metamask' ||
+        authenticationType === 'walletConnect'
+      ) {
         if (!address || address.length !== 42 || !address.startsWith('0x')) {
           throw new Error('Invalid wallet address');
         }
@@ -133,14 +142,16 @@ const Navbar = () => {
 
     return (
       <div className="relative group" ref={ref}>
-        <div className="relative rounded-full p-1 bg-[#00BFFF]/20">
+        <div
+          className="relative rounded-full p-1 bg-[#00BFFF]/20 cursor-pointer"
+          onClick={() => setOpen((o) => !o)}
+        >
           <Avatar className="w-9 h-9 ring-1 ring-[#00BFFF] ring-offset-1 ring-offset-gray-900">
             {globalProfileImage || profileImage ? (
               <AvatarImage
                 src={globalProfileImage || profileImage}
                 alt="Profile"
-                className="w-full h-full object-cover rounded-full cursor-pointer"
-                onClick={() => setOpen((o) => !o)}
+                className="w-full h-full object-cover rounded-full"
                 onError={(e) => {
                   e.currentTarget.src = '';
                   toast({
@@ -157,8 +168,7 @@ const Navbar = () => {
                   width={50}
                   height={50}
                   alt="Profile"
-                  onClick={() => setOpen((o) => !o)}
-                  className="cursor-pointer border-r-2 border-[#00BFFF] rounded-full transition-all duration-300 active:scale-95 hover:shadow-lg py-2"
+                  className="border-r-2 border-[#00BFFF] rounded-full transition-all duration-300 active:scale-95 hover:shadow-lg py-2"
                   style={{
                     boxShadow:
                       theme === 'dark'
@@ -183,11 +193,13 @@ const Navbar = () => {
           style={{ zIndex: 10 }}
         >
           <span className="text-[#00BFFF] text-sm font-mono bg-white dark:bg-gray-800 rounded px-2 py-1 shadow">
-            {authenticationType === 'metamask'
-              ? address
-                ? `${address.slice(0, 6)}...${address.slice(-4)}`
-                : ''
-              : user?.email}
+            {authenticationType === 'metamask' && address
+              ? `${address.slice(0, 6)}...${address.slice(-4)}`
+              : authenticationType === 'walletConnect' && wcAccount
+              ? `${wcAccount.slice(0, 6)}...${wcAccount.slice(-4)}`
+              : authenticationType === 'google'
+              ? user?.email || 'Google User'
+              : ''}
           </span>
         </div>
 
@@ -286,7 +298,8 @@ const Navbar = () => {
                   <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
                     Option 4
                   </button>
-                  {authenticationType === 'metamask' ? (
+                  {authenticationType === 'metamask' ||
+                  authenticationType === 'walletConnect' ? (
                     <button
                       onClick={disconnectWalletthis}
                       className="block text-left w-full px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"

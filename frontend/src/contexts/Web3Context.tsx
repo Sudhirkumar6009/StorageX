@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAccount, useConnect, useDisconnect, useAccountEffect } from 'wagmi';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 interface IWeb3Context {
@@ -15,12 +14,10 @@ const Web3Context = createContext<IWeb3Context | undefined>(undefined);
 export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
   const { logout, authStatus, login, authenticationType } = useAuth();
   const { address, isConnected } = useAccount();
   const { connectors, connect, isPending } = useConnect();
-  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+  const { disconnect } = useDisconnect(); // Add the useDisconnect hook
 
   useAccountEffect({
     onConnect(data) {
@@ -47,13 +44,26 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Implement proper disconnectWallet function that actually disconnects
+  const disconnectWallet = () => {
+    try {
+      disconnect();
+      // If you need to clear any local state related to wallet connection
+      if (authenticationType === 'metamask') {
+        logout();
+      }
+    } catch (error) {
+      console.error('Failed to disconnect wallet:', error);
+    }
+  };
+
   return (
     <Web3Context.Provider
       value={{
         address,
         isConnected: effectiveConnection,
         connectWallet,
-        disconnectWallet: () => setShowDisconnectConfirm(true),
+        disconnectWallet, // Now passes the actual disconnect function
       }}
     >
       {children}

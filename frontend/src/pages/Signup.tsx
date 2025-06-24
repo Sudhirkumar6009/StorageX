@@ -12,6 +12,7 @@ import { useWeb3 } from '../contexts/Web3Context';
 import { OrbitProgress, Riple } from 'react-loading-indicators';
 import { useGoogleLogin } from '@react-oauth/google';
 import { X } from 'lucide-react';
+import { useWalletConnect } from '../contexts/WalletConnectContext';
 import { userInfo } from 'os';
 import { useAuth } from '@/contexts/AuthContext.js';
 
@@ -19,8 +20,13 @@ const Signup = () => {
   const { theme } = useTheme();
   const { login, isAuthenticated, authenticationType } = useAuth();
   const navigate = useNavigate();
-
-  const { address, isConnected, connectWallet } = useWeb3();
+  const {
+    connectWalletConnect,
+    disconnectWalletConnect,
+    account: wcAccount,
+    isConnected: wcIsConnected,
+  } = useWalletConnect();
+  const { address, isConnected, connectWallet, disconnectWallet } = useWeb3();
   const [walletInfo, setWalletInfo] = useState(null);
   const [connectClicked, setConnectClicked] = useState(false);
   const [loadingCreation, setLoadingCreation] = useState(false);
@@ -34,12 +40,16 @@ const Signup = () => {
   };
 
   const sendToast = () => {
-    toast({
-      title: 'Connect MetaMask First',
-      description: 'Please connect your MetaMask wallet to continue.',
-      variant: 'destructive',
-      duration: 3000,
-    });
+    if (!isConnected && !wcIsConnected) {
+      toast({
+        title: 'Connect Wallet First',
+        description: 'Please connect your wallet to continue.',
+        variant: 'destructive',
+        duration: 3000,
+      });
+    } else {
+      console.log('Wallet already connected');
+    }
   };
 
   const googleLogin = useGoogleLogin({
@@ -85,13 +95,20 @@ const Signup = () => {
     },
   });
 
-  const handleCreateWallet = async () => {
-    if (!isConnected) {
+  const handleCreateAccount = async () => {
+    if (!isConnected && !wcIsConnected) {
       sendToast();
       return;
     }
 
-    setLoadingCreation(true); // Set loading at the start
+    setLoadingCreation(true);
+
+    let walletAddress = '';
+    if (isConnected) {
+      walletAddress = address;
+    } else if (wcIsConnected) {
+      walletAddress = wcAccount;
+    }
 
     try {
       const res = await fetch(
@@ -99,28 +116,17 @@ const Signup = () => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: formData.email, MetaMask: address }),
+          body: JSON.stringify({
+            email: formData.email,
+            Wallet: walletAddress.toUpperCase(), // Always send as Wallet
+          }),
         }
       );
       const data = await res.json();
       if (!data.success && data.exists) {
-        const toastID = toast({
+        toast({
           title: 'Account Already Exists',
-          description: (
-            <div className="flex flex-col gap-2">
-              <p>An account with this MetaMask address already exists.</p>
-              <Button
-                onClick={() => {
-                  navigate('/login');
-                  toastID.dismiss();
-                }}
-                variant="outline"
-                className="w-full"
-              >
-                Login Now
-              </Button>
-            </div>
-          ),
+          description: 'An account with this wallet address already exists.',
           variant: 'destructive',
           duration: 5000,
         });
@@ -147,7 +153,7 @@ const Signup = () => {
         duration: 3000,
       });
     } finally {
-      setLoadingCreation(false); // Always stop loading at the end
+      setLoadingCreation(false);
     }
   };
 
@@ -175,40 +181,52 @@ const Signup = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form className="space-y-6 pt-4">
-              <div className="relative">
-                <Button
-                  variant="outline"
-                  disabled={isAuthenticated}
-                  style={{
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    height: '50px',
-                  }}
-                  className={`w-full text-lg px-8 py-2 ${
-                    theme === 'dark'
-                      ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
-                      : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
-                  } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={() => {
-                    connectWallet();
-                    {
-                      !isConnected && setConnectClicked(true);
-                    }
-                  }}
-                  type="button"
-                >
-                  {isConnected ? 'MetaMask Connected' : 'Connect MetaMask'}
-                  <Avatar className="w-6 h-6 mt-1 ml-1 rounded-full">
-                    <AvatarFallback className="bg-transparent rounded-full">
-                      <img
-                        src="https://i.ibb.co/n4y03Fs/Metamask-NZ-Crypto-wallet.png"
-                        alt="Metamask"
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
+            <form className="space-y-4 pt-4">
+              <div>
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    disabled={isAuthenticated}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      height: '50px',
+                    }}
+                    className={`w-full text-lg px-8 py-2 ${
+                      theme === 'dark'
+                        ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
+                        : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
+                    } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    onClick={() => {
+                      connectWallet();
+                      {
+                        !isConnected && setConnectClicked(true);
+                      }
+                    }}
+                    type="button"
+                  >
+                    {isConnected ? 'MetaMask Connected' : 'Connect MetaMask'}
+                    <Avatar className="w-6 h-6 mt-1 ml-1 rounded-full">
+                      <AvatarFallback className="bg-transparent rounded-full">
+                        <img
+                          src="https://i.ibb.co/n4y03Fs/Metamask-NZ-Crypto-wallet.png"
+                          alt="Metamask"
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                  {isConnected && (
+                    <button
+                      type="button"
+                      onClick={() => disconnectWallet()}
+                      className="absolute top-1/2 right-3 transform -translate-y-1/2 w-6 h-6 p-1 bg-red-600 transparent hover:bg-red-700 text-white rounded flex items-center justify-center transition-all duration-200 shadow-md"
+                      title="Disconnect wallet"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
                 <div
                   className={`
                     w-full
@@ -292,6 +310,51 @@ const Signup = () => {
                 </div>
               </div>
 
+              <div className="relative mt-4">
+                <Button
+                  variant="outline"
+                  style={{
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    height: '50px',
+                  }}
+                  className={`w-full text-lg px-8 py-2 ${
+                    theme === 'dark'
+                      ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
+                      : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
+                  } ${wcIsConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={connectWalletConnect}
+                  disabled={wcIsConnected || isAuthenticated}
+                  type="button"
+                >
+                  <Avatar className="w-6 h-6 mt-1 ml-1 rounded-full">
+                    <AvatarFallback className="bg-transparent rounded-full">
+                      <img
+                        src="https://i.ibb.co/rKKXhDtv/wallet-Connect.png"
+                        alt="Metamask"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    </AvatarFallback>
+                  </Avatar>
+                  {wcIsConnected ? 'Wallet Connected' : 'Connect Wallet'}
+                </Button>
+
+                {wcIsConnected && (
+                  <button
+                    type="button"
+                    onClick={disconnectWalletConnect}
+                    className="absolute top-1/3 right-3 transform -translate-y-1/2 w-6 h-6 p-1 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-all duration-200 shadow-md"
+                    title="Disconnect WalletConnect"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+                {wcIsConnected && wcAccount && (
+                  <div className="text-xs mt-2 text-[#00BFFF] break-all">
+                    Connected: {wcAccount}
+                  </div>
+                )}
+              </div>
               <div>
                 <Button
                   variant="outline"
@@ -332,8 +395,10 @@ const Signup = () => {
 
               <Button
                 type="button"
-                onClick={isConnected ? handleCreateWallet : sendToast}
-                disabled={!isConnected || isAuthenticated}
+                onClick={
+                  isConnected || wcIsConnected ? handleCreateAccount : sendToast
+                }
+                disabled={(!isConnected && !wcIsConnected) || isAuthenticated}
                 variant="outline"
                 style={{
                   marginTop: '3rem',
@@ -341,22 +406,28 @@ const Signup = () => {
                   fontSize: '1.2rem',
                 }}
                 className={`w-full rounded-lg border transition-all duration-300 ease-in-out
-                  hover:scale-105 hover:shadow-lg 
-                  ${
-                    theme === 'dark'
-                      ? 'border-[#0091c2] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-black'
-                      : 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-white'
-                  }
-                  ${!isConnected ? 'opacity-50 cursor-not-allowed' : ''}
-                `}
+    hover:scale-105 hover:shadow-lg 
+    ${
+      theme === 'dark'
+        ? 'border-[#0091c2] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-black'
+        : 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-white'
+    }
+    ${!isConnected && !wcIsConnected ? 'opacity-50 cursor-not-allowed' : ''}
+  `}
               >
                 {isAuthenticated
                   ? `Already Logged in with ${
-                      authenticationType === 'google' ? 'Google' : 'MetaMask'
+                      authenticationType === 'google'
+                        ? 'Google'
+                        : isConnected
+                        ? 'MetaMask'
+                        : wcIsConnected
+                        ? 'WalletConnect'
+                        : ''
                     }`
-                  : isConnected
+                  : isConnected || wcIsConnected
                   ? 'Create Account'
-                  : 'Select any Method to Continue'}
+                  : 'Select to Continue'}
               </Button>
             </form>
 
