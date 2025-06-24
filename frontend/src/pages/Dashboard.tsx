@@ -235,7 +235,7 @@ const Dashboard = () => {
         }
 
         formData.append('file', file);
-        formData.append('wallet', wcAccount);
+        formData.append('wallet', wcAccount.toUpperCase());
         console.log('Uploading with WalletConnect wallet:', wcAccount);
 
         res = await fetch(
