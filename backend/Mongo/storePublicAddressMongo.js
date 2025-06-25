@@ -25,13 +25,11 @@ router.post("/api/store-address", async (req, res) => {
       });
     }
 
-    // Normalize address to lowercase
     Wallet = Wallet.toUpperCase();
 
     const db = client.db("Accounts");
     const addressesCollection = db.collection("WalletUsers");
 
-    // Always check with lowercase
     const existingMetaMask = await addressesCollection.findOne({ Wallet });
     if (existingMetaMask) {
       return res.json({

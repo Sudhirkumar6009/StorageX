@@ -17,7 +17,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({
   const { logout, authStatus, login, authenticationType } = useAuth();
   const { address, isConnected } = useAccount();
   const { connectors, connect, isPending } = useConnect();
-  const { disconnect } = useDisconnect(); // Add the useDisconnect hook
+  const { disconnect } = useDisconnect();
 
   useAccountEffect({
     onConnect(data) {

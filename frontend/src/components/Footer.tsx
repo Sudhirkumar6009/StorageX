@@ -17,7 +17,7 @@ const Footer = () => {
           : 'bg-white border-gray-200'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 text-left flex p-6 sm:p-10 lg:p-20 gap-5 flex-col justify-center">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
             <h3
@@ -88,24 +88,6 @@ const Footer = () => {
                 </>
               ) : (
                 <>
-                  <li>
-                    <Link
-                      to="/login"
-                      className={`text-sm hover:underline ${
-                        theme === 'dark'
-                          ? 'text-gray-300 hover:text-[#00BFFF]'
-                          : 'text-gray-600 hover:text-[#00BFFF]'
-                      }`}
-                    >
-                      <button
-                        onClick={() =>
-                          window.scrollTo({ top: 0, behavior: 'smooth' })
-                        }
-                      >
-                        Login
-                      </button>
-                    </Link>
-                  </li>
                   <li>
                     <Link
                       to="/signup"

@@ -9,7 +9,6 @@ import { ProfileProvider } from './contexts/ProfileContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Index from './pages/Index';
-import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Signup from './pages/Signup';
 import ProtectedRoute from './contexts/ProtectedRoute';
@@ -61,10 +60,9 @@ const App = () => (
                         <Sonner />
                         <div className="min-h-screen flex flex-col">
                           <Navbar />
-                          <main className="flex-1 pt-16">
+                          <main className="flex-1">
                             <Routes>
                               <Route path="/" element={<Index />} />
-                              <Route path="/login" element={<Login />} />
                               <Route path="/signup" element={<Signup />} />
                               <Route
                                 path="/dashboard"

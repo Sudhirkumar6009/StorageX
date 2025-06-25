@@ -10,7 +10,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 interface User {
   email: string;
   id: string;
-  loginMethod?: 'metamask' | 'google' | 'walletConnect'; // Add login method tracking
+  loginMethod?: 'metamask' | 'google' | 'walletConnect';
 }
 
 interface AuthContextType {
@@ -120,7 +120,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     return false;
   };
-  // ...existing code...
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {

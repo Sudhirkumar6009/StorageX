@@ -318,7 +318,7 @@ const Profile = () => {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-200 ${
+      className={`min-h-screen transition-colors mt-20 duration-200 ${
         theme === 'dark' ? 'bg-black' : 'bg-white'
       }`}
     >

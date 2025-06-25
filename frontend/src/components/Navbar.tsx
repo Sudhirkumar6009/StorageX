@@ -260,32 +260,25 @@ const Navbar = () => {
           : 'bg-white/90 border-gray-200'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+      <div className="mx-auto px-2 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
             to="/"
-            className={`text-2xl font-bold transition-colors duration-200 ${
+            className={`text-3xl transition-colors duration-200 pl-2 ${
               theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
             }`}
           >
-            StorageX
+            <img
+              src="https://i.ibb.co/W4bsrLGW/logo.png"
+              alt="Logo"
+              className="pr-3 h-10 w-15 inline-block mb-1"
+            />
           </Link>
-
           {/* Right section - Auth buttons and theme toggle */}
           <div className="flex items-center space-x-2">
             {isAuthenticated && (
               <div className="flex space-x-2 items-center">
-                <Button
-                  onClick={handleMongoConnect}
-                  variant="outline"
-                  size="sm"
-                >
-                  Connect MongoDB
-                </Button>
-                {mongoStatus && (
-                  <div className="text-sm mt-2">{mongoStatus}</div>
-                )}
                 <div className="mr-4">
                   <Link to="/dashboard">
                     <Button

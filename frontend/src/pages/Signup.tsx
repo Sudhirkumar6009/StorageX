@@ -15,6 +15,7 @@ import { X } from 'lucide-react';
 import { useWalletConnect } from '../contexts/WalletConnectContext';
 import { userInfo } from 'os';
 import { useAuth } from '@/contexts/AuthContext.js';
+import { useProfile } from '@/contexts/ProfileContext';
 
 const Signup = () => {
   const { theme } = useTheme();
@@ -29,6 +30,7 @@ const Signup = () => {
   const { address, isConnected, connectWallet, disconnectWallet } = useWeb3();
   const [walletInfo, setWalletInfo] = useState(null);
   const [connectClicked, setConnectClicked] = useState(false);
+  const { updateGlobalProfileImage } = useProfile();
   const [loadingCreation, setLoadingCreation] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -38,7 +40,32 @@ const Signup = () => {
     setConnectClicked(false);
     setFormData({ email: '' });
   };
-
+  const fetchAndSetProfileImage = async (
+    addressOrEmail: string,
+    type: string
+  ) => {
+    let url = '';
+    if (type === 'google') {
+      url = `${
+        import.meta.env.VITE_BACKEND_PORT_URL
+      }/api/profile/show/google/${addressOrEmail}`;
+    } else {
+      url = `${
+        import.meta.env.VITE_BACKEND_PORT_URL
+      }/api/profile/show/${addressOrEmail}`;
+    }
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.success && data.data && data.data.profileImage) {
+        updateGlobalProfileImage(data.data.profileImage);
+      } else {
+        updateGlobalProfileImage(null);
+      }
+    } catch {
+      updateGlobalProfileImage(null);
+    }
+  };
   const sendToast = () => {
     if (!isConnected && !wcIsConnected) {
       toast({
@@ -100,55 +127,92 @@ const Signup = () => {
       sendToast();
       return;
     }
-
     setLoadingCreation(true);
 
     let walletAddress = '';
+    let loginType: 'metamask' | 'walletConnect' = 'metamask';
     if (isConnected) {
       walletAddress = address;
+      loginType = 'metamask';
     } else if (wcIsConnected) {
       walletAddress = wcAccount;
+      loginType = 'walletConnect';
     }
 
     try {
+      // 1. Check if account exists
       const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/store-address`,
+        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetchUser`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: formData.email,
-            Wallet: walletAddress, // Always send as Wallet
-          }),
+          body: JSON.stringify({ address: walletAddress.toUpperCase() }),
         }
       );
       const data = await res.json();
-      if (!data.success && data.exists) {
+
+      if (data.success) {
+        // 2. If account exists, login
+        await login(walletAddress, loginType);
+        await fetchAndSetProfileImage(walletAddress, loginType);
         toast({
-          title: 'Account Already Exists',
-          description: 'An account with this wallet address already exists.',
-          variant: 'destructive',
-          duration: 5000,
+          title: 'Login Successful',
+          description: `Welcome back, ${
+            walletAddress.slice(0, 6) + '...' + walletAddress.slice(-5)
+          }`,
         });
-      } else if (data.success) {
-        toast({
-          title: 'Account Created Successfully',
-          description: 'Your new wallet has been created and stored.',
-          variant: 'default',
-          duration: 3000,
-        });
+        navigate('/dashboard');
       } else {
-        toast({
-          title: 'Error Creating Account',
-          description: 'Failed to store wallet address.',
-          variant: 'destructive',
-          duration: 3000,
-        });
+        // 3. If not found, create account then login
+        const createRes = await fetch(
+          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/store-address`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: formData.email,
+              Wallet: walletAddress,
+            }),
+          }
+        );
+        const createData = await createRes.json();
+
+        if (createData.success) {
+          await login(walletAddress, loginType);
+          await fetchAndSetProfileImage(walletAddress, loginType);
+          toast({
+            title: 'Account Created & Logged In',
+            description: 'Your account was created and you are now logged in.',
+            variant: 'default',
+            duration: 3000,
+          });
+          navigate('/dashboard');
+        } else if (createData.exists) {
+          // Defensive: fallback if race condition
+          await login(walletAddress, loginType);
+          await fetchAndSetProfileImage(walletAddress, loginType);
+          toast({
+            title: 'Login Successful',
+            description: `Welcome back, ${
+              walletAddress.slice(0, 6) + '...' + walletAddress.slice(-5)
+            }`,
+            variant: 'default',
+            duration: 3000,
+          });
+          navigate('/dashboard');
+        } else {
+          toast({
+            title: 'Error Creating Account',
+            description: createData.message || 'Failed to create account.',
+            variant: 'destructive',
+            duration: 3000,
+          });
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create wallet',
+        description: error.message || 'Failed to login or create account.',
         variant: 'destructive',
         duration: 3000,
       });
@@ -430,24 +494,6 @@ const Signup = () => {
                   : 'Select to Continue'}
               </Button>
             </form>
-
-            <div className="mt-6 text-center">
-              <p
-                className={`text-sm ${
-                  theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                }`}
-              >
-                Already have an account?{' '}
-                <Link
-                  to="/login"
-                  className={`font-medium hover:underline ${
-                    theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                  }`}
-                >
-                  Sign in
-                </Link>
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>
