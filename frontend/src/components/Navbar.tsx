@@ -231,7 +231,7 @@ const Navbar = () => {
         </div>
 
         {open && (
-          <div className="border-b absolute left-0 mt-5 w-48 bg-white dark:bg-gray-800 rounded shadow-lg z-50 flex flex-col border border-none">
+          <div className="border-b absolute right-0 mt-5 w-48 bg-white dark:bg-gray-800 rounded shadow-lg z-50 flex flex-col border border-none">
             {children}
           </div>
         )}
@@ -275,26 +275,58 @@ const Navbar = () => {
               className="pr-3 h-10 w-15 inline-block mb-1"
             />
           </Link>
-          {/* Right section - Auth buttons and theme toggle */}
-          <div className="flex items-center space-x-2">
-            {isAuthenticated && (
-              <div className="flex space-x-2 items-center">
-                <div className="mr-4">
-                  <Link to="/dashboard">
+          <div className="flex items-center">
+            {isAuthenticated ? (
+              <div className="items-center mr-4 h-full flex">
+                <div>
+                  <Link to="/" className="flex items-center h-full">
                     <Button
                       variant="outline"
-                      size="sm"
-                      className={`${
+                      className={`rounded-none px-10 border-0 font-normal transition-colors duration-200
+                      ${
                         theme === 'dark'
-                          ? 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-black'
-                          : 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-white'
-                      }`}
+                          ? 'bg-black text-white hover:text-[#00BFFF]'
+                          : 'bg-white text-black hover:text-[#00BFFF]'
+                      }
+                      font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest
+                    `}
+                      style={{
+                        minHeight: '64px',
+                        height: '100%',
+                        fontSize: '1.1rem',
+                        textTransform: 'none',
+                      }}
+                    >
+                      Home
+                    </Button>
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/dashboard" className="flex items-center h-full">
+                    <Button
+                      variant="outline"
+                      className={`rounded-none px-10 border-0 font-normal capitalize transition-colors duration-200
+                      ${
+                        theme === 'dark'
+                          ? 'bg-black text-white hover:text-[#00BFFF]'
+                          : 'bg-white text-black hover:text-[#00BFFF]'
+                      }
+                      font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest
+                    `}
+                      style={{
+                        minHeight: '64px',
+                        height: '100%',
+                        fontSize: '1.1rem',
+                        textTransform: 'none',
+                      }}
                     >
                       Dashboard
                     </Button>
                   </Link>
                 </div>
               </div>
+            ) : (
+              ''
             )}
             <div className="flex items-center space-x-4">
               {isAuthenticated && (
@@ -339,9 +371,9 @@ const Navbar = () => {
 
               <Button
                 onClick={toggleTheme}
-                variant="ghost"
-                size="sm"
-                className={`p-2 ${
+                variant="outline"
+                size="icon"
+                className={`border-none p-2 ${
                   theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
                 }`}
               >

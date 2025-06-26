@@ -10,8 +10,16 @@ import { toast } from '@/hooks/use-toast';
 import CryptoJS from 'crypto-js';
 import { useWeb3 } from '@/contexts/Web3Context';
 import FileBlock from '@/components/FileBlock';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
+import { green, red } from '@mui/material/colors';
+import Fab from '@mui/material/Fab';
+import CheckIcon from '@mui/icons-material/Check';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+
 import FileModal from '@/components/FileModal';
 import { deleteFile } from './DashDemo';
+import { CloudUpload } from 'lucide-react';
 import { useWalletConnect } from '../contexts/WalletConnectContext';
 
 const bucket = 'storagex';
@@ -43,8 +51,10 @@ const Dashboard = () => {
   const { theme } = useTheme();
   const { isAuthenticated, authenticationType, user } = useAuth();
   const [file, setFile] = useState(null);
-  const [cid, setCid] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const uploadTimer = React.useRef<ReturnType<typeof setTimeout>>();
+
   const {
     connectWalletConnect,
     disconnectWalletConnect,
@@ -56,20 +66,6 @@ const Dashboard = () => {
   const { address: metamaskAddress, isConnected } = useWeb3();
   const [fileName, setFileName] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [previewType, setPreviewType] = useState<
-    | 'image'
-    | 'video'
-    | 'pdf'
-    | 'doc'
-    | 'excel'
-    | 'ppt'
-    | 'archive'
-    | 'audio'
-    | 'other'
-    | null
-  >(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [allCids, setAllCids] = useState<{ name: string; cid: string }[]>([]);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [fileToRemove, setFileToRemove] = useState<FileItem | null>(null);
@@ -237,8 +233,8 @@ const Dashboard = () => {
       alert('User Authentication failed');
       return;
     }
-
-    setLoading(true);
+    setUploadSuccess(false);
+    setUploadLoading(true);
     const formData = new FormData();
     let res;
 
@@ -247,7 +243,6 @@ const Dashboard = () => {
         // Check if metamaskAddress is valid
         if (!metamaskAddress) {
           alert('MetaMask address is missing');
-          setLoading(false);
           return;
         }
 
@@ -266,7 +261,6 @@ const Dashboard = () => {
         // Check if wcAccount is valid
         if (!wcAccount) {
           alert('WalletConnect address is missing');
-          setLoading(false);
           return;
         }
 
@@ -285,7 +279,6 @@ const Dashboard = () => {
         // Your existing Google upload code...
         if (!user?.email) {
           alert('Google email is missing');
-          setLoading(false);
           return;
         }
 
@@ -305,11 +298,11 @@ const Dashboard = () => {
       const data = await res.json();
       if (data.success) {
         toast({ title: 'Upload successful', description: file.name }); // Changed from file.key to file.name
-        console.log('Actual File Name:', file.name);
         setFile(null);
         setFileName('');
-        await fetchCids(); // Fetch updated CIDs
-        await fetchFilebaseList(); // Update file list
+        await fetchCids();
+        await fetchFilebaseList();
+        setUploadSuccess(true);
       } else {
         alert('Upload failed: ' + (data.error || 'Unknown error'));
       }
@@ -317,7 +310,9 @@ const Dashboard = () => {
       console.error('Upload error:', err);
       alert('Upload error: ' + err.message);
     } finally {
-      setLoading(false);
+      setUploadLoading(false);
+      // Reset success after a short delay
+      uploadTimer.current = setTimeout(() => setUploadSuccess(false), 2000);
     }
   };
 
@@ -477,16 +472,16 @@ const Dashboard = () => {
       <div className="w-full mx-auto px-4 mt-20 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1
-            className={`text-3xl font-bold ${
+            className={`text-4xl font-bold ${
               theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}
+            } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold `}
           >
             Storage Dashboard
           </h1>
           <p
             className={`mt-2 ${
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-            }`}
+            } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
           >
             Manage your decentralized storage files
           </p>
@@ -500,15 +495,15 @@ const Dashboard = () => {
                 theme === 'dark'
                   ? 'bg-gray-900 border-gray-800'
                   : 'bg-white border-gray-200'
-              }`}
+              }  font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wide`}
             >
               <CardHeader>
                 <CardTitle
                   className={`${
                     theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                  }`}
+                  } tracking-wide uppercase`}
                 >
-                  Upload to IPFS
+                  Upload to Storage
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -521,7 +516,7 @@ const Dashboard = () => {
                   >
                     Select File
                   </Label>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-5 mt-1">
                     <Input
                       id="file-upload"
                       type="file"
@@ -534,19 +529,48 @@ const Dashboard = () => {
                       }`}
                       style={{ minWidth: 0 }}
                     />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={uploadFile}
-                      disabled={loading || !isAuthenticated}
-                      className={`h-10 px-4 py-2 ${
-                        theme === 'dark'
-                          ? 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-black'
-                          : 'border-[#00BFFF] text-[#00BFFF] hover:bg-[#00BFFF] hover:text-white'
-                      }`}
+                    <Box
+                      sx={{
+                        m: 1,
+                        display: 'inline-block',
+                        position: 'relative',
+                      }}
                     >
-                      {loading ? 'Uploading...' : 'Upload'}
-                    </Button>
+                      <Fab
+                        aria-label="upload"
+                        className={`text-white hover:text-[#00BFFF] `}
+                        sx={{
+                          width: 70,
+                          height: 70,
+                          color: '#fff',
+                          bgcolor: ['#00BFFF'],
+                          position: 'relative',
+                          zIndex: 2,
+                        }}
+                        onClick={uploadFile}
+                        disabled={uploadLoading || !isAuthenticated}
+                      >
+                        {uploadSuccess ? (
+                          <CheckIcon sx={{ fontSize: 40 }} />
+                        ) : (
+                          <CloudUpload
+                            style={{ height: '3rem', width: '3rem' }}
+                          />
+                        )}
+                      </Fab>
+                      {uploadLoading && (
+                        <CircularProgress
+                          size={75}
+                          sx={{
+                            color: '#00BFFF',
+                            position: 'absolute',
+                            top: -4,
+                            left: -4,
+                            zIndex: 1,
+                          }}
+                        />
+                      )}
+                    </Box>
                   </div>
                   <p
                     className={`text-sm mt-1 ${
@@ -570,13 +594,13 @@ const Dashboard = () => {
                 theme === 'dark'
                   ? 'bg-gray-900 border-gray-800'
                   : 'bg-white border-gray-200'
-              }`}
+              } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
             >
               <CardHeader>
                 <CardTitle
                   className={`${
                     theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                  }`}
+                  } uppercase tracking-wider`}
                 >
                   Preview File
                 </CardTitle>
@@ -594,13 +618,13 @@ const Dashboard = () => {
                 theme === 'dark'
                   ? 'bg-gray-900 border-gray-800'
                   : 'bg-white border-gray-200'
-              }`}
+              }  font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest `}
             >
               <CardHeader>
                 <CardTitle
                   className={`${
                     theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                  }`}
+                  } uppercase`}
                 >
                   Account Status
                 </CardTitle>
@@ -658,15 +682,15 @@ const Dashboard = () => {
                 theme === 'dark'
                   ? 'bg-gray-900 border-gray-800'
                   : 'bg-white border-gray-200'
-              }`}
+              }  font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
             >
               <CardHeader>
                 <CardTitle
                   className={`${
                     theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                  }`}
+                  } tracking-wider uppercase font-bold `}
                 >
-                  IPFS Network
+                  Cloud Infrastructure
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -675,9 +699,9 @@ const Dashboard = () => {
                   <p
                     className={`text-sm ${
                       theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}
+                    } tracking-none `}
                   >
-                    Connected to IPFS
+                    Cloud Connected
                   </p>
                 </div>
                 <p

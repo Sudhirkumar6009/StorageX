@@ -9,6 +9,7 @@ import earthAnimation from '@/assets/logo.png';
 import outVideo from '../assets/Comp.mp4';
 import { Player } from 'video-react';
 import '@/pages/Index.css';
+import remix from '@/assets/remix.svg';
 
 const Index = () => {
   const { theme } = useTheme();
@@ -43,18 +44,28 @@ const Index = () => {
   const companyLogos = [
     {
       img: 'https://static.cdnlogo.com/logos/m/25/mongodb.svg',
+      name: 'MongoDB',
     },
     {
       img: 'https://i.ibb.co/n4y03Fs/Metamask-NZ-Crypto-wallet.png',
     },
     {
-      img: 'https://static.cdnlogo.com/logos/m/25/mongodb.svg',
+      img: 'https://i.ibb.co/F4CCQsmY/Google.png',
     },
     {
-      img: earthAnimation,
+      img: 'https://i.ibb.co/CKBscq9S/filebase.png',
     },
     {
-      img: 'https://i.ibb.co/n4y03Fs/Metamask-NZ-Crypto-wallet.png',
+      img: 'https://i.ibb.co/ns6whb4j/walletconnect.png',
+    },
+    {
+      img: remix,
+    },
+    {
+      img: 'https://crust.network/img/logo.png',
+    },
+    {
+      img: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Ipfs-logo-1024-ice-text.png',
     },
   ];
 
@@ -82,17 +93,17 @@ const Index = () => {
       return () => cancelAnimationFrame(animationFrame);
     }, []);
 
-    // Duplicate the logos for seamless infinite scroll
     const logos = [...companyLogos, ...companyLogos];
 
     return (
-      <div className="w-full flex justify-center py-12 bg-transparent">
+      <div className="w-full flex justify-center pb-10 bg-transparent">
         <div
           ref={scrollRef}
-          className="h-50 w-full max-w-5xl overflow-hidden relative"
+          className="w-full pt-2 max-w-7xl overflow-hidden relative"
           style={{
+            height: '15rem',
             maskImage:
-              'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
+              'linear-gradient(to right, transparent 0%, black 10%, black 25% ,black 50%, black 90%, transparent 100%)',
           }}
         >
           <div
@@ -102,11 +113,21 @@ const Index = () => {
             {logos.map((logo, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-center bg-white/80 rounded-lg shadow-md border border-gray-200"
-                style={{ width: 200, height: 200, minWidth: 220 }}
+                className={`flex items-center hover:bg-[#00bfff] hover:scale-105 transition-transform duration-200 justify-center rounded-lg shadow-md border border-gray-200 ${
+                  theme === 'dark'
+                    ? 'bg-transparent border-gray-800 hover:border-[#00BFFF]'
+                    : 'bg-[#66d9ff] border-gray-200 hover:border-[#00BFFF]'
+                }`}
+                style={{
+                  width: 200,
+                  height: 200,
+                  minWidth: 220,
+                  minHeight: 220,
+                }}
               >
                 <img
                   src={logo.img}
+                  alt={logo.name}
                   style={{
                     height: '90%',
                     width: '90%',
@@ -594,97 +615,34 @@ const Index = () => {
             ))}
           </div>
         </div>
-
         {/* Infinite Company Logos Scroll */}
-        <InfiniteHorizontalScroll />
 
         {/* Technology Section */}
         <div
-          className={`py-20 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}
+          className={`py-20 ${
+            theme === 'dark' ? 'bg-gray-900' : 'bg-[#e6f9ff]'
+          }`}
         >
-          <div className="flex-1 text-left flex p-6 sm:p-10 lg:pt-5 lg:pl-20 lg:pr-20 gap-5 flex-col justify-center">
-            <div className="text-center mb-16">
-              <h2
-                className={`text-3xl md:text-4xl font-bold mb-4 ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-900'
-                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
-              >
-                Powered by Modern Technology
-              </h2>
-              <p
-                className={`text-lg max-w-2xl mx-auto ${
-                  theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
-              >
-                Built with the latest in decentralized technology stack
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div
-                className={`text-center p-8 rounded-lg ${
-                  theme === 'dark' ? 'bg-black' : 'bg-white'
-                }`}
-              >
-                <h3
-                  className={`text-2xl font-bold mb-4 ${
-                    theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                  } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
-                >
-                  IPFS Network
-                </h3>
-                <p
-                  className={`${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                  } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
-                >
-                  InterPlanetary File System for distributed, permanent storage
-                </p>
-              </div>
-
-              <div
-                className={`text-center p-8 rounded-lg ${
-                  theme === 'dark' ? 'bg-black' : 'bg-white'
-                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
-              >
-                <h3
-                  className={`text-2xl font-bold mb-4 ${
-                    theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                  } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
-                >
-                  Web3 Integration
-                </h3>
-                <p
-                  className={`${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                  } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
-                >
-                  Connect your wallet and interact with blockchain technology
-                </p>
-              </div>
-
-              <div
-                className={`text-center p-8 rounded-lg ${
-                  theme === 'dark' ? 'bg-black' : 'bg-white'
-                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
-              >
-                <h3
-                  className={`text-2xl font-bold mb-4 ${
-                    theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                  } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
-                >
-                  React Frontend
-                </h3>
-                <p
-                  className={`${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                  } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
-                >
-                  Modern, responsive interface built with React and Tailwind CSS
-                </p>
-              </div>
-            </div>
+          <div className="text-center mb-16">
+            <h2
+              className={`text-3xl md:text-4xl font-bold mb-4 ${
+                theme === 'dark' ? 'text-white' : 'text-gray-900'
+              } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
+            >
+              Developed by Modern Technology
+            </h2>
+            <p
+              className={`text-lg max-w-5xl mx-auto ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+              } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide `}
+            >
+              Cutting-edge technology stack that seamlessly blends the best of
+              modern decentralized and centralized solutions. Experience the
+              power of various infrastructures for unmatched security, speed,
+              and global accessibility.
+            </p>
           </div>
+          <InfiniteHorizontalScroll />
         </div>
 
         {/* CTA Section */}
@@ -700,28 +658,28 @@ const Index = () => {
               <h2
                 className={`text-3xl md:text-4xl font-bold mb-6 ${
                   theme === 'dark' ? 'text-white' : 'text-gray-900'
-                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
+                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide `}
               >
                 Ready to Get Started?
               </h2>
               <p
                 className={`text-lg mb-8 max-w-2xl mx-auto ${
                   theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] `}
+                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
               >
-                Join thousands of users who trust StorageX for their
-                decentralized storage needs
+                Join with many users who trust StorageX for their decentralized
+                storage needs
               </p>
               <Link to="/signup">
                 <Button
                   size="lg"
-                  className={`text-lg px-12 py-4 ${
+                  className={`text-lg px-10 py-4 h-13 text-xl ${
                     theme === 'dark'
                       ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
                       : 'bg-[#00BFFF] text-white hover:bg-[#0099CC]'
-                  }`}
+                  } tracking-wide`}
                 >
-                  Start Your Journey
+                  Start your Journey
                 </Button>
               </Link>
             </div>

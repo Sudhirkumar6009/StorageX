@@ -11,7 +11,12 @@ import Tooltip from '@mui/material/Tooltip';
 import { useWeb3 } from '../contexts/Web3Context';
 import { OrbitProgress, Riple } from 'react-loading-indicators';
 import { useGoogleLogin } from '@react-oauth/google';
-import { X } from 'lucide-react';
+import {
+  X,
+  ArrowRightFromLine,
+  ChevronRight,
+  ChevronRightCircleIcon,
+} from 'lucide-react';
 import { useWalletConnect } from '../contexts/WalletConnectContext';
 import { userInfo } from 'os';
 import { useAuth } from '@/contexts/AuthContext.js';
@@ -237,11 +242,11 @@ const Signup = () => {
         >
           <CardHeader className="text-center">
             <CardTitle
-              className={`text-2xl font-bold ${
+              className={`text-3xl font-bold ${
                 theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-              }`}
+              } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider `}
             >
-              Join StorageX
+              JOIN StorageX
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -260,7 +265,9 @@ const Signup = () => {
                       theme === 'dark'
                         ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
                         : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
-                    } ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${
+                      isConnected ? 'opacity-50 cursor-not-allowed' : ''
+                    } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider `}
                     onClick={() => {
                       connectWallet();
                       {
@@ -300,7 +307,7 @@ const Signup = () => {
                       isConnected && connectClicked
                         ? 'max-h-40 opacity-100 translate-y-0 mt-6'
                         : 'max-h-0 opacity-0 -translate-y-4'
-                    }
+                    } 
                   `}
                 >
                   <div className="relative bg-black border border-cyan-400 rounded-xl shadow-lg p-5 flex items-start justify-between gap-4">
@@ -310,10 +317,12 @@ const Signup = () => {
                           htmlFor="email"
                           className={`flex items-center gap-2 text-sm font-semibold ${
                             theme === 'dark' ? 'text-white' : 'text-gray-900'
-                          }`}
+                          } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider `}
                         >
                           Email
-                          <em className="text-xs font-normal not-italic text-gray-400">
+                          <em
+                            className={` font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider text-xs font-normal not-italic text-gray-400`}
+                          >
                             Optional
                           </em>
                         </Label>
@@ -357,7 +366,7 @@ const Signup = () => {
                           theme === 'dark'
                             ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500'
                             : 'bg-white border-gray-300 text-black'
-                        } focus:ring-2 focus:ring-cyan-400 outline-none transition-all`}
+                        } focus:ring-2 focus:ring-cyan-400 outline-none transition-all font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider`}
                       />
                     </div>
 
@@ -386,7 +395,9 @@ const Signup = () => {
                     theme === 'dark'
                       ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
                       : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
-                  } ${wcIsConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${
+                    wcIsConnected ? 'opacity-50 cursor-not-allowed' : ''
+                  } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider `}
                   onClick={connectWalletConnect}
                   disabled={wcIsConnected || isAuthenticated}
                   type="button"
@@ -414,7 +425,9 @@ const Signup = () => {
                   </button>
                 )}
                 {wcIsConnected && wcAccount && (
-                  <div className="text-xs mt-2 text-[#00BFFF] break-all">
+                  <div
+                    className={`font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider text-xs mt-2 text-[#00BFFF] break-all`}
+                  >
                     Connected: {wcAccount}
                   </div>
                 )}
@@ -432,7 +445,7 @@ const Signup = () => {
                     theme === 'dark'
                       ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
                       : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
-                  }`}
+                  } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider `}
                   onClick={() => {
                     googleLogin();
                   }}
@@ -479,19 +492,39 @@ const Signup = () => {
     ${!isConnected && !wcIsConnected ? 'opacity-50 cursor-not-allowed' : ''}
   `}
               >
-                {isAuthenticated
-                  ? `Already Logged in with ${
-                      authenticationType === 'google'
-                        ? 'Google'
-                        : isConnected
-                        ? 'MetaMask'
-                        : wcIsConnected
-                        ? 'WalletConnect'
-                        : ''
-                    }`
-                  : isConnected || wcIsConnected
-                  ? 'Create Account'
-                  : 'Select to Continue'}
+                {isAuthenticated ? (
+                  `Already Logged in with ${
+                    authenticationType === 'google'
+                      ? 'Google'
+                      : isConnected
+                      ? 'MetaMask'
+                      : wcIsConnected
+                      ? 'WalletConnect'
+                      : ''
+                  }`
+                ) : isConnected || wcIsConnected ? (
+                  <span
+                    className={`flex items-center justify-center font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider`}
+                  >
+                    CONTINUE{' '}
+                    <ChevronRight
+                      strokeWidth={2}
+                      className="ml-2"
+                      style={{
+                        width: 25,
+                        height: 25,
+                        minWidth: 25,
+                        minHeight: 25,
+                      }}
+                    />
+                  </span>
+                ) : (
+                  <span
+                    className={`font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider`}
+                  >
+                    SELECT TO CONTINUE
+                  </span>
+                )}
               </Button>
             </form>
           </CardContent>

@@ -23,14 +23,14 @@ const Footer = () => {
             <h3
               className={`text-xl font-bold mb-4 ${
                 theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-              }`}
+              }  font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide `}
             >
               StorageX
             </h3>
             <p
               className={`text-sm ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-              }`}
+              } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide `}
             >
               A decentralized storage solution powered by IPFS and blockchain
               technology. Store your files securely and access them from
@@ -42,7 +42,7 @@ const Footer = () => {
             <h4
               className={`text-lg font-semibold mb-4 ${
                 theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}
+              } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
             >
               Quick Links
             </h4>
@@ -56,7 +56,7 @@ const Footer = () => {
                         theme === 'dark'
                           ? 'text-gray-300 hover:text-[#00BFFF]'
                           : 'text-gray-600 hover:text-[#00BFFF]'
-                      }`}
+                      } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
                     >
                       <button
                         onClick={() =>
@@ -74,7 +74,7 @@ const Footer = () => {
                         theme === 'dark'
                           ? 'text-gray-300 hover:text-[#00BFFF]'
                           : 'text-gray-600 hover:text-[#00BFFF]'
-                      }`}
+                      } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
                     >
                       <button
                         onClick={() =>
@@ -95,14 +95,14 @@ const Footer = () => {
                         theme === 'dark'
                           ? 'text-gray-300 hover:text-[#00BFFF]'
                           : 'text-gray-600 hover:text-[#00BFFF]'
-                      }`}
+                      } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
                     >
                       <button
                         onClick={() =>
                           window.scrollTo({ top: 0, behavior: 'smooth' })
                         }
                       >
-                        Sign Up
+                        Join Now
                       </button>
                     </Link>
                   </li>
@@ -115,7 +115,7 @@ const Footer = () => {
             <h4
               className={`text-lg font-semibold mb-4 ${
                 theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}
+              } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
             >
               Technology
             </h4>
@@ -123,23 +123,37 @@ const Footer = () => {
               <li
                 className={`text-sm ${
                   theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                }`}
+                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
               >
-                IPFS Storage
+                Filebase Storage
               </li>
               <li
                 className={`text-sm ${
                   theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                }`}
+                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
               >
-                Blockchain Integration
+                Blockchain Wallet Integration
               </li>
               <li
                 className={`text-sm ${
                   theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                }`}
+                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
               >
                 Web3 Connectivity
+              </li>
+              <li
+                className={`text-sm ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
+              >
+                MongoDB Atlas metadata Management
+              </li>
+              <li
+                className={`text-sm ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
+              >
+                Google Registration for Web 2.0 users
               </li>
             </ul>
           </div>
@@ -153,7 +167,7 @@ const Footer = () => {
           <p
             className={`text-sm ${
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-            }`}
+            } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
           >
             © 2024 StorageX. Built with React.js, IPFS, and Web3 technologies.
           </p>
