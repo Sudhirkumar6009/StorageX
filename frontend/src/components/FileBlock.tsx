@@ -137,9 +137,12 @@ const FileBlock: React.FC<FileBlockProps> = ({
         <img
           src={fileUrl}
           alt={name}
-          className={`transition-all duration-300 object-cover ${
+          style={{
+            transition: 'all 500ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
+          }}
+          className={`object-cover ${
             isHovered
-              ? 'w-full h-full'
+              ? 'w-full h-full scale-105'
               : 'max-w-full max-h-full object-contain rounded'
           }`}
           onError={() => setThumbnailError(true)}
@@ -279,52 +282,87 @@ const FileBlock: React.FC<FileBlockProps> = ({
 
   return (
     <div
-      className={`relative w-full h-[250px] border-2 rounded-md cursor-pointer transition-all duration-300 overflow-hidden ${
-        config.bg
-      } ${isHovered ? 'scale-105 shadow-2xl z-10' : 'shadow-sm'}`}
+      className={`relative w-full h-[250px] border-2 rounded-md cursor-pointer overflow-hidden ${config.bg} $$
+      isHovered
+        ? 'scale-105 shadow-2xl z-10'
+        : 'shadow-sm'
+    }`}
+      style={{
+        transition: 'all 400ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleView}
     >
-      {/* Main content */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      {/* Main content with smooth zoom effect on hover */}
+      <div
+        className={`absolute inset-0 flex items-center justify-center p-1 ${
+          isHovered ? 'scale-110' : 'scale-100'
+        }`}
+        style={{
+          transition: 'transform 800ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
+        }}
+      >
         {renderThumbnail()}
       </div>
 
-      {/* Hover overlays */}
-      {isHovered && (
-        <>
-          <div className="absolute h-20 top-0 left-0 right-0 bg-gradient-to-b from-background/100 to-background/0 px-4 py-2 z-20">
-            <div
-              className={`text-sm font-medium text-foreground truncate
-                font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] text-bold tracking-wider`}
-            >
-              {name}
-            </div>
+      {/* Hover overlays with smooth fade-in/out */}
+      <div
+        className="absolute h-20 top-0 left-0 right-0 bg-gradient-to-b from-background/100 to-background/0 px-4 py-2 z-20"
+        style={{
+          opacity: isHovered ? 1 : 0,
+          transition: 'opacity 900ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
+          pointerEvents: isHovered ? 'auto' : 'none',
+        }}
+      >
+        <div
+          className={`text-sm font-medium text-foreground truncate
+          font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] text-bold tracking-wider`}
+          style={{
+            transform: isHovered ? 'translateY(0)' : 'translateY(-10px)',
+            transition: 'transform 500ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
+            opacity: isHovered ? 1 : 0,
+          }}
+        >
+          {name}
+        </div>
+      </div>
+
+      <div
+        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent px-3 py-2 z-20"
+        style={{
+          opacity: isHovered ? 1 : 0,
+          transition: 'opacity 500ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
+          pointerEvents: isHovered ? 'auto' : 'none',
+        }}
+      >
+        <div
+          className="flex items-center justify-between"
+          style={{
+            transform: isHovered ? 'translateY(0)' : 'translateY(10px)',
+            transition: 'transform 500ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
+            opacity: isHovered ? 1 : 0,
+          }}
+        >
+          <button
+            onClick={handleView}
+            className="p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
+          >
+            <Eye size={16} />
+          </button>
+          <div
+            className={`text-xs text-center flex-1 mx-2 text-foreground font-medium font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
+          >
+            {size}
           </div>
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent px-3 py-2 z-20">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={handleView}
-                className="p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
-              >
-                <Eye size={16} />
-              </button>
-              <div
-                className={`text-xs text-center flex-1 mx-2 text-foreground font-medium font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
-              >
-                {size}
-              </div>
-              <button
-                onClick={handleDelete}
-                className="p-2 bg-destructive text-destructive-foreground rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+          <button
+            onClick={handleDelete}
+            className="p-2 bg-destructive text-destructive-foreground rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
