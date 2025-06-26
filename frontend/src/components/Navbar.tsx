@@ -115,35 +115,8 @@ const Navbar = () => {
       console.error('Error fetching profile:', err);
       toast({
         title: 'Error loading profile',
-        description: err.message,
-        variant: 'destructive',
-      });
-    }
-  };
-  const handleMongoConnect = async () => {
-    setMongoStatus('Connecting...');
-    try {
-      const res = await fetch(`${backendUrl}/api/mongo/test`);
-      const data = await res.json();
-
-      if (data.success) {
-        setMongoStatus('✅ ' + data.message);
-        toast({
-          title: 'MongoDB Connected',
-          description: 'Successfully connected to MongoDB Atlas',
-        });
-      } else {
-        setMongoStatus('❌ Connection Failed');
-        toast({
-          title: 'Connection Failed',
-          description: data.error || 'Could not connect to MongoDB',
-          variant: 'destructive',
-        });
-      }
-    } catch (err: any) {
-      setMongoStatus('❌ Error: ' + err.message);
-      toast({
-        title: 'Connection Error',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         description: err.message,
         variant: 'destructive',
       });
@@ -183,6 +156,8 @@ const Navbar = () => {
                   e.currentTarget.src = '';
                   toast({
                     title: 'Error loading image',
+                    className:
+                      'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
                     description: 'Could not load profile image',
                     variant: 'destructive',
                   });
@@ -326,16 +301,35 @@ const Navbar = () => {
                 </div>
               </div>
             ) : (
-              ''
+              <div>
+                <Link to="/signup" className="flex items-center h-full">
+                  <Button
+                    variant="outline"
+                    className={`bg-[#00BFFF] rounded-none px-10 mr-5 border-0 font-normal transition-colors duration-200
+                      ${
+                        theme === 'dark'
+                          ? 'text-black hover:bg-[#0099CC] hover:text-black'
+                          : 'text-black hover:text-[#00BFFF]'
+                      }
+                      font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider
+                    `}
+                    style={{
+                      minHeight: '64px',
+                      height: '100%',
+                      fontSize: '1.1rem',
+                      textTransform: 'none',
+                    }}
+                  >
+                    Register Now
+                  </Button>
+                </Link>
+              </div>
             )}
-            <div className="flex items-center space-x-4">
+            <div
+              className={`flex items-center space-x-4 font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
+            >
               {isAuthenticated && (
                 <DropdownMenu>
-                  <Link to={`/`}>
-                    <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
-                      Home
-                    </button>
-                  </Link>
                   <Link to={`/profile`}>
                     <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
                       Manage Profile
@@ -354,7 +348,7 @@ const Navbar = () => {
                   authenticationType === 'walletConnect' ? (
                     <button
                       onClick={disconnectWalletthis}
-                      className="block text-left w-full px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
+                      className="block text-left w-full font-bold px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
                     >
                       Disconnect Wallet
                     </button>

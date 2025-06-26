@@ -29,6 +29,7 @@ interface FileItem {
   id: string;
   name: string;
   cid: string;
+  key: string;
   size: string;
   type:
     | 'image'
@@ -66,7 +67,7 @@ const Dashboard = () => {
   const { address: metamaskAddress, isConnected } = useWeb3();
   const [fileName, setFileName] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
-  const [allCids, setAllCids] = useState<{ name: string; cid: string }[]>([]);
+  const [allCids, setAllCids] = useState<{ key: string; cid: string }[]>([]);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [fileToRemove, setFileToRemove] = useState<FileItem | null>(null);
   const [result, setResult] = useState(null);
@@ -297,7 +298,12 @@ const Dashboard = () => {
       // Handle the response
       const data = await res.json();
       if (data.success) {
-        toast({ title: 'Upload successful', description: file.name }); // Changed from file.key to file.name
+        toast({
+          title: 'Upload successful',
+          className:
+            'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
+          description: file.name,
+        }); // Changed from file.key to file.name
         setFile(null);
         setFileName('');
         await fetchCids();
@@ -342,17 +348,18 @@ const Dashboard = () => {
     const buildFiles = async () => {
       if (!allCids) return;
       const filesWithSize = await Promise.all(
-        allCids.map(async ({ name, cid }, idx) => {
+        allCids.map(async ({ key, cid }, idx) => {
           const size = await fetchFileSize(cid);
           return {
             id: `${cid}-${idx}`,
-            name,
+            key,
+            name: key,
             cid,
             size,
-            type: getFileType(name) as FileItem['type'],
+            type: getFileType(key) as FileItem['type'],
             preview:
-              getFileType(name) === 'image'
-                ? `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${cid}?w=164&h=164&fit=crop&auto=format`
+              getFileType(key) === 'image'
+                ? `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${cid}`
                 : undefined,
           };
         })
@@ -362,8 +369,22 @@ const Dashboard = () => {
     buildFiles();
   }, [allCids]);
 
-  const handleView = (file: FileItem) => {
-    setSelectedFile(file);
+  const handleView = (file: any) => {
+    console.log('Opening file preview:', file); // For debugging
+
+    // Create a properly formatted file object for the modal
+    // Ensure the file type is determined correctly
+    const fileType = getFileType(file.key || file.name);
+
+    setSelectedFile({
+      ...file,
+      id: file.id || String(Math.random()),
+      name: file.name || file.key,
+      key: file.key || file.name,
+      type: fileType,
+      size: file.size ? formatSize(Number(file.size)) : 'N/A',
+    });
+
     setIsModalOpen(true);
   };
 
@@ -429,12 +450,16 @@ const Dashboard = () => {
 
       toast({
         title: 'Success',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         description: 'File removed successfully',
       });
     } catch (err) {
       console.error('Remove error:', err);
       toast({
         title: 'Error',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         description: err.message,
         variant: 'destructive',
       });
@@ -465,11 +490,11 @@ const Dashboard = () => {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-200 ${
+      className={`min-h-screen transition-colors duration-200 p-10  ${
         theme === 'dark' ? 'bg-black' : 'bg-white'
       }`}
     >
-      <div className="w-full mx-auto px-4 mt-20 sm:px-6 lg:px-8 py-8">
+      <div className="w-full mx-auto px-4 mt-5 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1
             className={`text-4xl font-bold ${
@@ -718,16 +743,27 @@ const Dashboard = () => {
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>
-              All Your{' '}
+            <CardTitle
+              className={
+                'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider'
+              }
+            >
+              {' '}
               {fileList.filter((file) => cids.includes(file.cid)).length} Files
+              Found
             </CardTitle>
           </CardHeader>
           <CardContent>
             {fileList.length === 0 && cids.length > 0 ? (
-              <div>No files uploaded yet.</div>
+              <div
+                className={
+                  'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider'
+                }
+              >
+                No files uploaded yet.
+              </div>
             ) : (
-              <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
                 {fileList
                   .filter((file) => cids.includes(file.cid))
                   .map((file, idx) => {
@@ -739,8 +775,19 @@ const Dashboard = () => {
                         name={file.key}
                         size={file.size ? formatSize(Number(file.size)) : 'N/A'}
                         type={fileType}
-                        onView={() => handleView(file)}
-                        thumbnail={`https://cooperative-salmon-galliform.myfilebase.com/ipfs/${file.cid}`}
+                        cid={file.cid}
+                        onView={() =>
+                          handleView({
+                            ...file,
+                            type: fileType,
+                            id: String(idx),
+                          })
+                        }
+                        thumbnail={
+                          fileType === 'image'
+                            ? `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${file.cid}`
+                            : undefined
+                        }
                         onDelete={() => {
                           setFileToRemove(file);
                           setShowRemoveConfirm(true);
@@ -754,7 +801,21 @@ const Dashboard = () => {
             <FileModal
               isOpen={isModalOpen}
               onClose={handleCloseModal}
-              file={selectedFile}
+              file={
+                selectedFile
+                  ? {
+                      ...selectedFile,
+                      key: selectedFile.key || selectedFile.name,
+                      cid: selectedFile.cid,
+                      name: selectedFile.name || selectedFile.key,
+                      thumbnail: `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${selectedFile.cid}`,
+                      // Make sure the type is included, especially for images
+                      type:
+                        selectedFile.type ||
+                        getFileType(selectedFile.key || selectedFile.name),
+                    }
+                  : null
+              }
             />
           </CardContent>
         </Card>
@@ -781,16 +842,20 @@ const Dashboard = () => {
             style={{ zIndex: 9999 }}
           >
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg w-80">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
-                Are you sure?
+              <h2
+                className={`text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100  font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
+              >
+                Are you sure ?
               </h2>
-              <p className="mb-6 text-gray-600 dark:text-gray-300">
-                Do you really want to remove this file?
+              <p
+                className={`mb-6 text-gray-600 dark:text-gray-300  font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
+              >
+                Do you really want to remove this file ?
               </p>
               <div className="flex justify-end space-x-2">
                 <button
                   onClick={() => setShowRemoveConfirm(false)}
-                  className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  className={` font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600`}
                 >
                   Cancel
                 </button>
@@ -799,7 +864,7 @@ const Dashboard = () => {
                     setShowRemoveConfirm(false);
                     await handleRemoveFile(fileToRemove);
                   }}
-                  className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+                  className={`px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600  font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
                 >
                   Remove
                 </button>

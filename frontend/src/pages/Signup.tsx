@@ -75,6 +75,8 @@ const Signup = () => {
     if (!isConnected && !wcIsConnected) {
       toast({
         title: 'Connect Wallet First',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         description: 'Please connect your wallet to continue.',
         variant: 'destructive',
         duration: 3000,
@@ -162,6 +164,8 @@ const Signup = () => {
         await fetchAndSetProfileImage(walletAddress, loginType);
         toast({
           title: 'Login Successful',
+          className:
+            'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
           description: `Welcome back, ${
             walletAddress.slice(0, 6) + '...' + walletAddress.slice(-5)
           }`,
@@ -187,6 +191,8 @@ const Signup = () => {
           await fetchAndSetProfileImage(walletAddress, loginType);
           toast({
             title: 'Account Created & Logged In',
+            className:
+              'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
             description: 'Your account was created and you are now logged in.',
             variant: 'default',
             duration: 3000,
@@ -198,6 +204,8 @@ const Signup = () => {
           await fetchAndSetProfileImage(walletAddress, loginType);
           toast({
             title: 'Login Successful',
+            className:
+              'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider',
             description: `Welcome back, ${
               walletAddress.slice(0, 6) + '...' + walletAddress.slice(-5)
             }`,
@@ -208,6 +216,8 @@ const Signup = () => {
         } else {
           toast({
             title: 'Error Creating Account',
+            className:
+              'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
             description: createData.message || 'Failed to create account.',
             variant: 'destructive',
             duration: 3000,
@@ -217,6 +227,8 @@ const Signup = () => {
     } catch (error: any) {
       toast({
         title: 'Error',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         description: error.message || 'Failed to login or create account.',
         variant: 'destructive',
         duration: 3000,

@@ -28,6 +28,8 @@ const AvatarComponent = React.memo(
               e.currentTarget.src = '';
               toast({
                 title: 'Error loading image',
+                className:
+                  'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
                 description: 'Could not load profile image',
                 variant: 'destructive',
               });
@@ -145,6 +147,8 @@ const Profile = () => {
       console.error('Error fetching profile:', err);
       toast({
         title: 'Error loading profile',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         description: err.message || 'Failed to load profile data',
         variant: 'destructive',
       });
@@ -229,6 +233,8 @@ const Profile = () => {
         // Update global profile image
         updateGlobalProfileImage(profileImage);
         toast({
+          className:
+            'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider',
           title: 'Profile Updated Successfully',
         });
         await fetchProfileData();
@@ -243,12 +249,16 @@ const Profile = () => {
       setCopied(true);
       toast({
         title: 'Copied!',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         description: 'Address copied to clipboard',
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       toast({
         title: 'Failed to copy',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         description: 'Please try again',
         variant: 'destructive',
       });
@@ -262,6 +272,8 @@ const Profile = () => {
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: 'File too large',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         description: 'Please select an image smaller than 5MB',
         variant: 'destructive',
       });
@@ -272,6 +284,8 @@ const Profile = () => {
     if (!file.type.startsWith('image/')) {
       toast({
         title: 'Invalid file type',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         description: 'Please select an image file',
         variant: 'destructive',
       });
@@ -283,6 +297,8 @@ const Profile = () => {
       setProfileImage(event.target?.result as string);
       toast({
         title: 'Photo uploaded',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider',
       });
     };
     reader.readAsDataURL(file);
@@ -320,7 +336,7 @@ const Profile = () => {
     <div
       className={`min-h-screen transition-colors mt-20 duration-200 ${
         theme === 'dark' ? 'bg-black' : 'bg-white'
-      }`}
+      } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -489,15 +505,18 @@ const Profile = () => {
                         },
                         input: {
                           color: theme === 'dark' ? '#FFFFFF' : '#000000', // Input text color
-                          fontFamily: 'Inter, sans-serif', // Custom font family
+                          fontFamily:
+                            '"Century Gothic", CenturyGothic, AppleGothic, sans-serif', // Updated font family
                           fontSize: '1rem',
                           fontWeight: 400,
-                          letterSpacing: '0.025em',
+                          letterSpacing: '0.075em', // Added wider letter spacing
                         },
                       },
                       '& .MuiInputLabel-root': {
                         color: '#fff', // Label color
-                        fontFamily: 'Inter, sans-serif',
+                        fontFamily:
+                          '"Century Gothic", CenturyGothic, AppleGothic, sans-serif', // Updated font family
+                        letterSpacing: '0.05em', // Added wider letter spacing
                         '&.Mui-focused': {
                           color: '#00BFFF', // Focused label color
                         },
@@ -543,15 +562,18 @@ const Profile = () => {
                         },
                         input: {
                           color: theme === 'dark' ? '#FFFFFF' : '#000000', // Input text color
-                          fontFamily: 'Inter, sans-serif', // Custom font family
                           fontSize: '1rem',
+                          fontFamily:
+                            '"Century Gothic", CenturyGothic, AppleGothic, sans-serif', // Updated font family
                           fontWeight: 400,
-                          letterSpacing: '0.025em',
+                          letterSpacing: '0.075em', // Added wider letter spacing
                         },
                       },
                       '& .MuiInputLabel-root': {
                         color: '#fff', // Label color
-                        fontFamily: 'Inter, sans-serif',
+                        fontFamily:
+                          '"Century Gothic", CenturyGothic, AppleGothic, sans-serif', // Updated font family
+                        letterSpacing: '0.05em', // Added wider letter spacing
                         '&.Mui-focused': {
                           color: '#00BFFF', // Focused label color
                         },
@@ -567,7 +589,7 @@ const Profile = () => {
                       theme === 'dark'
                         ? 'bg-green-600 text-white hover:bg-green-700'
                         : 'bg-green-600 text-white hover:bg-green-700'
-                    }`}
+                    } font-bold uppercase`}
                   >
                     Save Changes
                   </Button>

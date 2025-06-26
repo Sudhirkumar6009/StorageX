@@ -124,6 +124,8 @@ const Login = () => {
         description:
           'Please connect your MetaMask or WalletConnect wallet or continue with Google.',
         variant: 'destructive',
+        className:
+          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         duration: 3000,
       });
       return;
