@@ -17,7 +17,8 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://storage-x-47xm.vercel.app/",
+      "https://storage-x-47xm.vercel.app", // Removed trailing slash!
+      "https://storage-x-lilac.vercel.app",
       "http://localhost:8080",
       "http://localhost:3000",
     ],
@@ -40,5 +41,5 @@ app.use(cidMatchingMongo);
 app.use(googleAccount);
 
 app.listen(PORT, () => {
-  console.log(`Backend server running on ${process.env.BACKEND_PORT_URL}`);
+  console.log(`Backend server running on port ${PORT}`);
 });
