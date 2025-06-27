@@ -17,7 +17,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://storage-x-lilac.vercel.app",
+      "https://storage-x-47xm.vercel.app/",
       "http://localhost:8080",
       "http://localhost:3000",
     ],

@@ -222,7 +222,7 @@ const FileBlock: React.FC<FileBlockProps> = ({
             overflow: 'hidden',
           }}
         >
-          {/* <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
             <div style={{ height: '100%' }}>
               <Viewer
                 fileUrl={pdfUrl}
@@ -231,7 +231,7 @@ const FileBlock: React.FC<FileBlockProps> = ({
                 }}
               />
             </div>
-          </Worker> */}
+          </Worker>
         </div>
       );
     }
