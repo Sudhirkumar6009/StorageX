@@ -167,7 +167,7 @@ const FileModal: React.FC<FileModalProps> = ({ isOpen, onClose, file }) => {
             }}
           >
             {/* Use the matching version 3.11.174 */}
-            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+            {/* <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
               <div style={{ height: '100%' }}>
                 <Viewer
                   fileUrl={pdfUrl}
@@ -197,7 +197,7 @@ const FileModal: React.FC<FileModalProps> = ({ isOpen, onClose, file }) => {
                   </div>
                 )}
               </div>
-            </Worker>
+            </Worker> */}
           </div>
         );
 

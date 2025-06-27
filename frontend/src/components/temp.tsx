@@ -166,7 +166,7 @@ const FileModal: React.FC<FileModalProps> = ({ isOpen, onClose, file }) => {
             className="w-full h-full"
             style={{ height: 'calc(100vh - 200px)' }}
           >
-            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+            {/* <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
               <div style={{ height: '100%' }}>
                 <Viewer
                   fileUrl={pdfUrl}
@@ -196,7 +196,7 @@ const FileModal: React.FC<FileModalProps> = ({ isOpen, onClose, file }) => {
                   </div>
                 )}
               </div>
-            </Worker>
+            </Worker> */}
           </div>
         );
 
