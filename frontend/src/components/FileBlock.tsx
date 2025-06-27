@@ -196,36 +196,38 @@ const FileBlock: React.FC<FileBlockProps> = ({
         ? `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${cid}`
         : '';
 
-      console.log('Displaying PDF with URL:', pdfUrl);
-      if (!pdfUrl) {
+      // For normal state (not hovered), just show an icon with PDF label
+      if (!pdfUrl || !isHovered) {
         return (
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <FileIcon size={120} className="text-red-600" />
+          <div className="flex flex-col items-center justify-center space-y-2">
+            <File size={48} className="text-red-600" />
             <div>
-              <h3 className="text-lg font-semibold text-foreground">
-                PDF Document
-              </h3>
-              <p className="text-muted-foreground">
-                Could not retrieve PDF URL
+              <p className="text-xs font-medium text-center text-red-600 font-['Century_Gothic',CenturyGothic,AppleGothic,sans-serif] tracking-wider">
+                PDF
               </p>
             </div>
           </div>
         );
       }
+
+      // For hovered state, show a proper PDF preview with controlled dimensions
       return (
-        <div
-          className="w-full h-full"
-          style={{
-            height: 'calc(100vh - 200px)',
-            border: '1px solid rgba(0, 0, 0, 0.2)',
-            borderRadius: '4px',
-            overflow: 'hidden',
-          }}
-        >
+        <div className="w-full h-full flex items-center justify-center overflow-hidden">
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-            <div style={{ height: '100%' }}>
+            <div
+              style={{
+                height: '100%',
+                width: '100%',
+                maxHeight: '220px', // Control height to fit in card
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <Viewer
                 fileUrl={pdfUrl}
+                defaultScale={0.4} // Smaller scale to fit in card
+                initialPage={0}
                 onDocumentLoad={() => {
                   console.log('PDF loaded successfully');
                 }}
