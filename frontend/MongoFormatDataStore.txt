@@ -1,6 +1,0 @@
-_id: ObjectId.......
-email : "sudhir.kuchara@..." or "Not Provided"
-public : 0x7Dd7fF142611DbAdB368D2Cb8CB9873b1F23d323
-MetaMask : 0x477A1EE355fBc1D2fd0552cA838C6a1f3B0a4127
-updatesAt : {new Date()}
-storage : {{},{},{},...} <- collection of stored file's CID or any secured hash data.
