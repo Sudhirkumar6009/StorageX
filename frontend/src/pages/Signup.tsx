@@ -21,6 +21,7 @@ import { useWalletConnect } from '../contexts/WalletConnectContext';
 import { userInfo } from 'os';
 import { useAuth } from '@/contexts/AuthContext.js';
 import { useProfile } from '@/contexts/ProfileContext';
+import { form } from 'viem/chains';
 
 const Signup = () => {
   const { theme } = useTheme();
@@ -246,6 +247,50 @@ const Signup = () => {
     }
   };
 
+  const fetchUserData = async (walletAddress: string) => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_PORT_URL}/api/fetchUser`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: walletAddress.toUpperCase() }),
+        }
+      );
+      const data = await res.json();
+
+      if (data.success && data.profile && data.profile.email) {
+        return data.profile.email;
+      }
+      return '';
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      return '';
+    }
+  };
+
+  useEffect(() => {
+    if (isConnected && address) {
+      fetchUserData(address).then((email) => {
+        if (email) {
+          setFormData((prev) => ({ ...prev, email }));
+          setConnectClicked(true);
+        }
+      });
+    }
+  }, [isConnected, address]);
+
+  useEffect(() => {
+    if (wcIsConnected && wcAccount) {
+      fetchUserData(wcAccount).then((email) => {
+        if (email) {
+          setWcEmail(email);
+          setWcConnectClicked(true);
+        }
+      });
+    }
+  }, [wcIsConnected, wcAccount]);
+
   return (
     <div
       className={`min-h-screen flex items-center justify-center transition-colors duration-200 ${
@@ -325,7 +370,6 @@ const Signup = () => {
                     Connected: {address}
                   </div>
                 )}
-
                 <div
                   className={`
                     w-full
@@ -449,7 +493,9 @@ const Signup = () => {
                   <button
                     type="button"
                     onClick={disconnectWalletConnect}
-                    className="absolute top-1/3 right-3 transform -translate-y-1/2 w-6 h-6 p-1 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-all duration-200 shadow-md"
+                    className={`absolute right-3 transform -translate-y-1/2 w-6 h-6 p-1 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-all duration-1000 shadow-md ${
+                      wcIsConnected && wcConnectClicked ? 'top-6' : 'top-1/4'
+                    }`}
                     title="Disconnect WalletConnect"
                   >
                     <X size={13} />

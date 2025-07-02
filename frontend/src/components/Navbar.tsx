@@ -252,12 +252,12 @@ const Navbar = () => {
           </Link>
           <div className="flex items-center">
             {isAuthenticated ? (
-              <div className="items-center mr-4 h-full flex">
+              <div className="items-center h-full flex">
                 <div>
                   <Link to="/" className="flex items-center h-full">
                     <Button
                       variant="outline"
-                      className={`rounded-none px-10 border-0 font-normal transition-colors duration-200
+                      className={`rounded-none h-full sm:mr-5 font-10 border-0 font-normal transition-colors duration-200
                       ${
                         theme === 'dark'
                           ? 'bg-transparent text-white hover:text-[#00BFFF]'
@@ -266,9 +266,6 @@ const Navbar = () => {
                       font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest
                     `}
                       style={{
-                        minHeight: '64px',
-                        height: '100%',
-                        fontSize: '1.1rem',
                         textTransform: 'none',
                       }}
                     >
@@ -280,7 +277,7 @@ const Navbar = () => {
                   <Link to="/dashboard" className="flex items-center h-full">
                     <Button
                       variant="outline"
-                      className={`rounded-none px-10 border-0 font-normal capitalize transition-colors duration-200
+                      className={`rounded-none border-0 font-normal sm:mr-5 capitalize transition-colors duration-200
                       ${
                         theme === 'dark'
                           ? 'bg-transparent text-white hover:text-[#00BFFF]'
@@ -289,9 +286,6 @@ const Navbar = () => {
                       font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest
                     `}
                       style={{
-                        minHeight: '64px',
-                        height: '100%',
-                        fontSize: '1.1rem',
                         textTransform: 'none',
                       }}
                     >

@@ -21,6 +21,11 @@ app.use(
       "https://storage-x-lilac.vercel.app",
       "http://localhost:8080",
       "http://localhost:3000",
+      "http://192.168.180.136:8080",
+      "capacitor://localhost",
+      "https://*.vercel.app",
+      "https://storagex.netlify.app", // If you're using Netlify
+      "*",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

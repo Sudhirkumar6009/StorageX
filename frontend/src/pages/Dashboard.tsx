@@ -490,7 +490,7 @@ const Dashboard = () => {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-200 p-10  ${
+      className={`min-h-screen transition-colors duration-200 mx-auto pt-8 sm:p-8 lg:p-10  ${
         theme === 'dark' ? 'bg-black' : 'bg-white'
       }`}
     >

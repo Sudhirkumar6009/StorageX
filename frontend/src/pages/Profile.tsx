@@ -63,6 +63,10 @@ const Profile = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [updatedProfile, setUpdatedProfile] = useState<String | null>(null);
+  const [walletEmail, setWalletEmail] = useState<string>('');
+  const [emailStatus, setEmailStatus] = useState<
+    'found' | 'not_provided' | 'none'
+  >('none');
   const { updateGlobalProfileImage } = useProfile();
   const navigate = useNavigate();
   const backendUrl = import.meta.env.VITE_BACKEND_PORT_URL;
@@ -135,6 +139,15 @@ const Profile = () => {
         console.log('Profile data:', data.data);
         setName(data.data.name || '');
         setEmail(data.data.email || '');
+
+        // Check email status for wallet users
+        if (
+          authenticationType === 'metamask' ||
+          authenticationType === 'walletConnect'
+        ) {
+          checkEmailStatus(data.data.email);
+        }
+
         if (data.data.profileImage) {
           setProfileImage(data.data.profileImage);
           updateGlobalProfileImage(data.data.profileImage);
@@ -157,6 +170,21 @@ const Profile = () => {
       setProfileImage(null);
       updateGlobalProfileImage(null);
       setFetchLoading(false);
+    }
+  };
+
+  const checkEmailStatus = (email: string) => {
+    if (!email) {
+      setEmailStatus('none');
+      return;
+    }
+
+    if (email === 'Not Provided') {
+      setEmailStatus('not_provided');
+      setWalletEmail('');
+    } else {
+      setEmailStatus('found');
+      setWalletEmail(email);
     }
   };
 
@@ -338,6 +366,75 @@ const Profile = () => {
         theme === 'dark' ? 'bg-black' : 'bg-white'
       } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
     >
+      {/* Email notification for wallet users */}
+      {(authenticationType === 'metamask' ||
+        authenticationType === 'walletConnect') && (
+        <>
+          {emailStatus === 'found' ? (
+            <div
+              className={`fixed top-20 left-0 z-50 px-4 py-2 rounded-r-lg ${
+                theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'
+              } shadow-lg border-l-4 border-[#00BFFF]`}
+            >
+              <p
+                className={`text-xs ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                }`}
+              >
+                Email found for wallet:
+              </p>
+              <p
+                className={`text-sm font-bold ${
+                  theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
+                }`}
+              >
+                {walletEmail}
+              </p>
+            </div>
+          ) : (
+            <div
+              className={`fixed top-20 left-0 z-50 px-4 py-2 rounded-r-lg ${
+                theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'
+              } shadow-lg border-l-4 border-[#00BFFF]`}
+            >
+              <p
+                className={`text-xs ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                }`}
+              >
+                Email not found for wallet:
+              </p>
+              <p
+                className={`text-sm font-bold ${
+                  theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
+                }`}
+              >
+                {walletEmail}
+              </p>
+            </div>
+          )}
+
+          {emailStatus === 'not_provided' && (
+            <div
+              className={`fixed top-20 left-0 z-50 px-4 py-2 rounded-r-lg ${
+                theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'
+              } shadow-lg border-l-4 border-amber-500`}
+            >
+              <p
+                className={`text-xs ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                }`}
+              >
+                No email provided for this wallet
+              </p>
+              <p className={`text-sm font-bold text-amber-500`}>
+                Add your email for better account management
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1
