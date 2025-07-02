@@ -10,6 +10,7 @@ import outVideo from '../assets/Comp.mp4';
 import { Player } from 'video-react';
 import '@/pages/Index.css';
 import remix from '@/assets/remix.svg';
+import crust from '@/assets/crust.svg';
 
 const Index = () => {
   const { theme } = useTheme();
@@ -62,7 +63,7 @@ const Index = () => {
       img: remix,
     },
     {
-      img: 'https://crust.network/img/logo.png',
+      img: crust,
     },
     {
       img: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Ipfs-logo-1024-ice-text.png',
@@ -113,7 +114,7 @@ const Index = () => {
             {logos.map((logo, idx) => (
               <div
                 key={idx}
-                className={`flex items-center hover:bg-[#00bfff] hover:scale-105 transition-transform duration-200 justify-center rounded-lg shadow-md border border-gray-200 ${
+                className={`flex items-center p-5 pr-2 hover:bg-[#00bfff] hover:scale-105 transition-transform duration-200 justify-center rounded-lg shadow-md border border-gray-200 ${
                   theme === 'dark'
                     ? 'bg-transparent border-gray-800 hover:border-[#00BFFF]'
                     : 'bg-[#66d9ff] border-gray-200 hover:border-[#00BFFF]'
@@ -235,7 +236,7 @@ const Index = () => {
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 94 136"
-                  className="w-60 h-80 md:w-80 md:h-[32rem] max-w-full"
+                  className="hidden md:block w-60 h-80 md:w-80 md:h-[32rem] max-w-full"
                 >
                   <path
                     stroke="#0086b3"

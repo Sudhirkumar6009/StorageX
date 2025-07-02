@@ -35,12 +35,17 @@ const Signup = () => {
   const { address, isConnected, connectWallet, disconnectWallet } = useWeb3();
   const [walletInfo, setWalletInfo] = useState(null);
   const [connectClicked, setConnectClicked] = useState(false);
+  const [wcConnectClicked, setWcConnectClicked] = useState(false);
+  const [wcEmail, setWcEmail] = useState('');
   const { updateGlobalProfileImage } = useProfile();
   const [loadingCreation, setLoadingCreation] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
   });
-
+  const closeWcEmailReq = () => {
+    setWcConnectClicked(false);
+    setWcEmail('');
+  };
   const closeEmailReq = () => {
     setConnectClicked(false);
     setFormData({ email: '' });
@@ -138,12 +143,15 @@ const Signup = () => {
 
     let walletAddress = '';
     let loginType: 'metamask' | 'walletConnect' = 'metamask';
+    let emailToUse = '';
     if (isConnected) {
       walletAddress = address;
       loginType = 'metamask';
+      emailToUse = formData.email;
     } else if (wcIsConnected) {
       walletAddress = wcAccount;
       loginType = 'walletConnect';
+      emailToUse = wcEmail;
     }
 
     try {
@@ -179,7 +187,7 @@ const Signup = () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              email: formData.email,
+              email: emailToUse, // Use the email based on connection type
               Wallet: walletAddress,
             }),
           }
@@ -310,6 +318,14 @@ const Signup = () => {
                     </button>
                   )}
                 </div>
+                {isConnected && address && (
+                  <div
+                    className={`font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider text-xs mt-2 text-[#00BFFF] break-all`}
+                  >
+                    Connected: {address}
+                  </div>
+                )}
+
                 <div
                   className={`
                     w-full
@@ -410,7 +426,10 @@ const Signup = () => {
                   } ${
                     wcIsConnected ? 'opacity-50 cursor-not-allowed' : ''
                   } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider `}
-                  onClick={connectWalletConnect}
+                  onClick={() => {
+                    connectWalletConnect();
+                    !wcIsConnected && setWcConnectClicked(true);
+                  }}
                   disabled={wcIsConnected || isAuthenticated}
                   type="button"
                 >
@@ -443,6 +462,84 @@ const Signup = () => {
                     Connected: {wcAccount}
                   </div>
                 )}
+                <div
+                  className={`
+    w-full
+    overflow-hidden
+    transition-all duration-1000 ease-in-out
+    ${
+      wcIsConnected && wcConnectClicked
+        ? 'max-h-40 opacity-100 translate-y-0 mt-6'
+        : 'max-h-0 opacity-0 -translate-y-4'
+    } 
+  `}
+                >
+                  <div className="relative bg-black border border-cyan-400 rounded-xl shadow-lg p-5 flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center mb-2">
+                        <Label
+                          htmlFor="wc-email"
+                          className={`flex items-center gap-2 text-sm font-semibold ${
+                            theme === 'dark' ? 'text-white' : 'text-gray-900'
+                          } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider `}
+                        >
+                          Email
+                          <em
+                            className={` font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider text-xs font-normal not-italic text-gray-400`}
+                          >
+                            Optional
+                          </em>
+                        </Label>
+                        <Tooltip
+                          placement="top"
+                          title=" For Profile Management, Updates and Notifications facilities through email. User can modify or remove this anytime"
+                          arrow
+                        >
+                          <span
+                            className="w-4 h-4 flex items-center ml-2 justify-center text-cyan-400 border border-cyan-400 rounded-full font-bold p-2 cursor-pointer hover:opacity-70 transition-opacity"
+                            style={{
+                              fontFamily: 'algerian',
+                              backgroundColor:
+                                theme === 'dark' ? '#1a1a1a' : '#fff',
+                            }}
+                          >
+                            i
+                          </span>
+                        </Tooltip>
+                      </div>
+
+                      <Input
+                        id="wc-email"
+                        name="wc-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={wcEmail}
+                        onChange={(e) => setWcEmail(e.target.value)}
+                        style={{
+                          height: '50px',
+                          paddingLeft: '1rem',
+                          fontWeight: 600,
+                          letterSpacing: '0.03rem',
+                        }}
+                        className={`w-full rounded-lg mt-1 border ${
+                          theme === 'dark'
+                            ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500'
+                            : 'bg-white border-gray-300 text-black'
+                        } focus:ring-2 focus:ring-cyan-400 outline-none transition-all font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Close Button */}
+                  <button
+                    type="button"
+                    aria-label="Close"
+                    onClick={closeWcEmailReq}
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full hover:bg-red-300 text-red-900 text-xl font-bold grid place-items-center transition-all shadow-md"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
               </div>
               <div>
                 <Button

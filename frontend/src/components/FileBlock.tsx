@@ -196,21 +196,33 @@ const FileBlock: React.FC<FileBlockProps> = ({
         ? `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${cid}`
         : '';
 
-      // For normal state (not hovered), just show an icon with PDF label
       if (!pdfUrl || !isHovered) {
         return (
-          <div className="flex flex-col items-center justify-center space-y-2">
-            <File size={48} className="text-red-600" />
-            <div>
-              <p className="text-xs font-medium text-center text-red-600 font-['Century_Gothic',CenturyGothic,AppleGothic,sans-serif] tracking-wider">
-                PDF
-              </p>
-            </div>
+          <div className="w-full h-full flex items-center justify-center overflow-hidden">
+            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+              <div
+                style={{
+                  height: '100%',
+                  width: '100%',
+                  maxHeight: '220px', // Control height to fit in card
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Viewer
+                  fileUrl={pdfUrl}
+                  defaultScale={0.4} // Smaller scale to fit in card
+                  initialPage={0}
+                  onDocumentLoad={() => {
+                    console.log('PDF loaded successfully');
+                  }}
+                />
+              </div>
+            </Worker>
           </div>
         );
       }
-
-      // For hovered state, show a proper PDF preview with controlled dimensions
       return (
         <div className="w-full h-full flex items-center justify-center overflow-hidden">
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
@@ -296,7 +308,6 @@ const FileBlock: React.FC<FileBlockProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleView}
     >
-      {/* Main content with smooth zoom effect on hover */}
       <div
         className={`absolute inset-0 flex items-center justify-center p-1 ${
           isHovered ? 'scale-110' : 'scale-100'
@@ -308,22 +319,21 @@ const FileBlock: React.FC<FileBlockProps> = ({
         {renderThumbnail()}
       </div>
 
-      {/* Hover overlays with smooth fade-in/out */}
       <div
         className="absolute h-20 top-0 left-0 right-0 bg-gradient-to-b from-background/100 to-background/0 px-4 py-2 z-20"
         style={{
-          opacity: isHovered ? 1 : 0,
+          opacity: isHovered ? 1 : 1,
           transition: 'opacity 900ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
           pointerEvents: isHovered ? 'auto' : 'none',
         }}
       >
         <div
-          className={`text-sm font-medium text-foreground truncate
+          className={`text-sm font-medium text-foreground truncate m-2
           font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] text-bold tracking-wider`}
           style={{
-            transform: isHovered ? 'translateY(0)' : 'translateY(-10px)',
+            transform: isHovered ? 'translateX(0)' : 'translateX(-10px)',
             transition: 'transform 500ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
-            opacity: isHovered ? 1 : 0,
+            opacity: 1,
           }}
         >
           {name}

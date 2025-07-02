@@ -260,8 +260,8 @@ const Navbar = () => {
                       className={`rounded-none px-10 border-0 font-normal transition-colors duration-200
                       ${
                         theme === 'dark'
-                          ? 'bg-black text-white hover:text-[#00BFFF]'
-                          : 'bg-white text-black hover:text-[#00BFFF]'
+                          ? 'bg-transparent text-white hover:text-[#00BFFF]'
+                          : 'bg-transparent text-black hover:text-[#00BFFF]'
                       }
                       font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest
                     `}
@@ -283,8 +283,8 @@ const Navbar = () => {
                       className={`rounded-none px-10 border-0 font-normal capitalize transition-colors duration-200
                       ${
                         theme === 'dark'
-                          ? 'bg-black text-white hover:text-[#00BFFF]'
-                          : 'bg-white text-black hover:text-[#00BFFF]'
+                          ? 'bg-transparent text-white hover:text-[#00BFFF]'
+                          : 'bg-transparent text-black hover:text-[#00BFFF]'
                       }
                       font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest
                     `}
