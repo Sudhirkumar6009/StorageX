@@ -271,7 +271,11 @@ const Navbar = () => {
             <img
               src="https://i.ibb.co/W4bsrLGW/logo.png"
               alt="Logo"
-              className="pr-3 h-10 w-15 inline-block mb-1"
+              className={`${
+                scrolled
+                  ? 'pr-4 h-6 w-13 inline-block mb-2'
+                  : 'pr-3 h-7 w-13 inline-block mb-1'
+              }`}
             />
           </Link>
           <div className="flex items-center">
@@ -281,7 +285,7 @@ const Navbar = () => {
                   <Link to="/" className="flex items-center h-full">
                     <Button
                       variant="outline"
-                      className={`rounded-none h-full sm:mr-5 font-10 border-0 font-normal transition-colors duration-200
+                      className={`rounded-none h-full sm:mr-5 font-10 border-0 transition-colors duration-200
                       ${
                         theme === 'dark'
                           ? 'bg-transparent text-white hover:text-[#00BFFF]'
