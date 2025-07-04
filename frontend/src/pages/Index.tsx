@@ -19,27 +19,36 @@ const Index = () => {
   const [cubeSize, setCubeSize] = React.useState(275);
   const [gridSize, setGridSize] = React.useState(5);
   const [maxAngle, setMaxAngle] = React.useState(200);
+  const [gridRows, setgridRows] = React.useState(5);
+  const [gridCols, setgridCols] = React.useState(5);
+
   useEffect(() => {
-    const updateMaxAngle = () => {
-      if (window.innerWidth < 640) {
-        setCubeSize(150);
-        setGridSize(9);
-        setMaxAngle(100); // Small screens
-      } else if (window.innerWidth < 1024) {
-        setCubeSize(200);
-        setGridSize(8);
-        setMaxAngle(150); // Medium screens
+    const updateCubeSettings = () => {
+      if (window.matchMedia('(max-width: 640px)').matches) {
+        setCubeSize(175);
+        setGridSize(4); // No cubes for small screens
+        setMaxAngle(100);
+        setgridRows(10);
+        setgridCols(3);
+      } else if (window.matchMedia('(max-width: 1024px)').matches) {
+        setCubeSize(230);
+        setGridSize(4); // Medium screens
+        setMaxAngle(150);
+        setgridRows(7);
+        setgridCols(3);
       } else {
-        setCubeSize(255);
-        setMaxAngle(200); // Large screens
-        setGridSize(5);
+        setCubeSize(275);
+        setGridSize(5); // Large screens
+        setMaxAngle(200);
+        setgridRows(5);
+        setgridCols(5);
       }
     };
 
-    updateMaxAngle(); // Initial value
-    window.addEventListener('resize', updateMaxAngle); // Update on resize
+    updateCubeSettings(); // Initial settings
+    window.addEventListener('resize', updateCubeSettings); // Update on resize
 
-    return () => window.removeEventListener('resize', updateMaxAngle);
+    return () => window.removeEventListener('resize', updateCubeSettings);
   }, []);
   const features = [
     {
@@ -172,43 +181,57 @@ const Index = () => {
   return (
     <>
       <div
-        className={`relative min-h-screen transition-colors duration-200 ${
+        className={`relative min-h-screen transition-colors duration-200 w-full max-w-full overflow-x-hidden ${
           theme === 'dark' ? 'bg-black' : 'bg-white'
         }`}
+        style={{ width: '100vw', maxWidth: '100vw', overflowX: 'hidden' }}
       >
         {/* Main Content */}
-        <div className="relative z-10">
+        <div
+          className="relative z-10 w-full max-w-full"
+          style={{ width: '100vw', maxWidth: '100vw', overflowX: 'hidden' }}
+        >
           {/* Hero Section */}
-          <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-20 mb-10">
+          <div
+            className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-20 mb-10 max-w-full"
+            style={{ maxWidth: '100vw' }}
+          >
             <div
               style={{
                 width: '100%',
-                height: '600px',
                 top: 0,
                 position: 'absolute',
                 zIndex: -1,
                 opacity: 0.4,
                 pointerEvents: 'none',
                 margin: '1rem',
+                left: 0,
+                right: 0,
               }}
             >
               <Cubes
                 gridSize={gridSize}
                 maxAngle={maxAngle}
+                gridRows={gridRows}
+                gridCols={gridCols}
                 cubeSize={cubeSize}
                 radius={10}
-                borderStyle="1px solid #00bfff"
-                faceColor="#000"
+                borderStyle={`${
+                  theme === 'dark' ? '1px solid #00bfff' : '1px solid #00bfff'
+                }`}
+                faceColor={`${theme === 'dark' ? '#000' : '#fff'}`}
                 rippleColor="#fff"
                 rippleSpeed={10}
                 autoAnimate={true}
                 rippleOnClick={true}
               />
             </div>
-
-            <div className="flex flex-col lg:flex-row w-full">
+            <div
+              className="flex flex-col lg:flex-row w-full max-w-full"
+              style={{ maxWidth: '100vw' }}
+            >
               {/* Left Side */}
-              <div className="flex-1 text-left flex p-6 sm:p-10 lg:p-20 gap-5 flex-col justify-center">
+              <div className="flex-1 text-left flex p-6 sm:p-10 lg:p-20 gap-5 flex-col justify-center min-w-0">
                 <h1
                   className={`text-3xl md:text-7xl mb-6 ${
                     theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
@@ -281,7 +304,7 @@ const Index = () => {
               </div>
               {/* Right Side */}
 
-              <div className="flex-1 justify-center items-center lg:relative sm:block hidden md:block">
+              <div className="flex-1 justify-center items-center lg:relative sm:block hidden md:block min-w-0">
                 {/* Replace video with SVG */}
                 <div className="w-full h-full flex items-center justify-center">
                   <svg
@@ -615,7 +638,10 @@ const Index = () => {
             </div>
           </div>
           {/* Features Section */}
-          <div className="flex-1 text-left flex p-6 sm:p-10 lg:p-20 gap-5 flex-col justify-center">
+          <div
+            className="flex-1 text-left flex p-6 sm:p-10 lg:p-20 gap-5 flex-col justify-center w-full max-w-full"
+            style={{ maxWidth: '100vw' }}
+          >
             <div className="text-left mb-16">
               <h2
                 className={`text-3xl md:text-4xl font-bold mb-4 ${
@@ -667,12 +693,12 @@ const Index = () => {
               ))}
             </div>
           </div>
-          {/* Infinite Company Logos Scroll */}
           {/* Technology Section */}
           <div
-            className={`py-20 ${
+            className={`py-20 w-full max-w-full ${
               theme === 'dark' ? 'bg-gray-900' : 'bg-[#e6f9ff]'
             }`}
+            style={{ maxWidth: '100vw' }}
           >
             <div className="text-center mb-16">
               <h2
@@ -697,7 +723,10 @@ const Index = () => {
           </div>
           {/* CTA Section */}
           {!isAuthenticated && (
-            <div className="flex-1 text-left flex p-6 sm:p-10 lg:p-20 gap-5 flex-col justify-center">
+            <div
+              className="flex-1 text-left flex p-6 sm:p-10 lg:p-20 gap-5 flex-col justify-center w-full max-w-full"
+              style={{ maxWidth: '100vw' }}
+            >
               <div
                 className={`text-center p-12 rounded-2xl ${
                   theme === 'dark'

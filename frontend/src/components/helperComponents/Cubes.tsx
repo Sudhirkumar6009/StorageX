@@ -11,7 +11,9 @@ interface Duration {
 }
 
 export interface CubesProps {
-  gridSize?: number;
+  gridRows?: number; // <-- add this
+  gridCols?: number; // <-- add this
+  gridSize?: number; // (keep for backward compatibility)
   cubeSize?: number;
   maxAngle?: number;
   radius?: number;
@@ -28,6 +30,8 @@ export interface CubesProps {
 }
 
 const Cubes: React.FC<CubesProps> = ({
+  gridRows,
+  gridCols,
   gridSize = 10,
   cubeSize,
   maxAngle = 45,
@@ -238,14 +242,20 @@ const Cubes: React.FC<CubesProps> = ({
     };
   }, [onPointerMove, resetAll, onClick]);
 
-  const cells = Array.from({ length: gridSize });
+  // Use gridRows/gridCols if provided, else fallback to gridSize
+  const rows = gridRows ?? gridSize;
+  const cols = gridCols ?? gridSize;
+
+  const cellsR = Array.from({ length: rows });
+  const cellsC = Array.from({ length: cols });
+
   const sceneStyle: React.CSSProperties = {
     gridTemplateColumns: cubeSize
-      ? `repeat(${gridSize}, ${cubeSize}px)`
-      : `repeat(${gridSize}, 1fr)`,
+      ? `repeat(${cols}, ${cubeSize}px)`
+      : `repeat(${cols}, 1fr)`,
     gridTemplateRows: cubeSize
-      ? `repeat(${gridSize}, ${cubeSize}px)`
-      : `repeat(${gridSize}, 1fr)`,
+      ? `repeat(${rows}, ${cubeSize}px)`
+      : `repeat(${rows}, 1fr)`,
     columnGap: colGap,
     rowGap: rowGap,
     perspective: '99999999px',
@@ -270,8 +280,8 @@ const Cubes: React.FC<CubesProps> = ({
       style={wrapperStyle}
     >
       <div ref={sceneRef} className="grid w-full h-full" style={sceneStyle}>
-        {cells.map((_, r) =>
-          cells.map((__, c) => (
+        {cellsR.map((_, r) =>
+          cellsC.map((__, c) => (
             <div
               key={`${r}-${c}`}
               className="cube relative w-full h-full aspect-square [transform-style:preserve-3d]"

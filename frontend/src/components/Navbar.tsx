@@ -22,6 +22,7 @@ const Navbar = () => {
   const { globalProfileImage, updateGlobalProfileImage } = useProfile();
   const { account: wcAccount, isConnected: wcIsConnected } = useWalletConnect();
   const backendUrl = import.meta.env.VITE_BACKEND_PORT_URL;
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -49,6 +50,14 @@ const Navbar = () => {
     isConnected,
     user?.email,
   ]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const disconnectEmail = async () => {
     setOnConfirmDisconnect(() => logout);
@@ -229,11 +238,26 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 w-full border-b transition-all duration-300 backdrop-blur-sm ${
-        theme === 'dark'
-          ? 'bg-black/90 border-gray-800'
-          : 'bg-white/90 border-gray-200'
-      }`}
+      className={`
+        fixed z-50 border-b transition-all duration-500 backdrop-blur-sm
+        left-1/2 -translate-x-1/2
+        ${
+          theme === 'dark'
+            ? 'bg-transparent/80 border-gray-800'
+            : 'bg-white/90 border-gray-200'
+        }
+        rounded-full shadow-lg
+      `}
+      style={{
+        top: scrolled ? 20 : 0,
+        width: scrolled ? '90vw' : '100vw',
+        margin: 0,
+        borderColor: '#00bfff',
+        borderRadius: scrolled ? '2rem' : '0rem',
+        transform: 'translateX(-50%)',
+        transition:
+          'top 0.4s cubic-bezier(.4,2,.6,1), width 0.4s cubic-bezier(.4,2,.6,1)',
+      }}
     >
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -361,7 +385,7 @@ const Navbar = () => {
                 onClick={toggleTheme}
                 variant="outline"
                 size="icon"
-                className={`border-none p-2 ${
+                className={`border-none p-2 rounded-full ${
                   theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
                 }`}
               >
