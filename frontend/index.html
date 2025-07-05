@@ -38,14 +38,34 @@
     <meta
       http-equiv="Content-Security-Policy"
       content="
-    default-src * data: blob: 'unsafe-inline' 'unsafe-eval';
-    script-src * data: blob: 'unsafe-inline' 'unsafe-eval';
-    connect-src * data: blob: 'unsafe-inline' 'unsafe-eval';
-    img-src * data: blob: 'unsafe-inline';
-    media-src * data: blob: 'unsafe-inline';
-    style-src * data: blob: 'unsafe-inline';
-    font-src * data: blob: 'unsafe-inline';
-    frame-src * data: blob: 'unsafe-inline';
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://www.googletagmanager.com https://www.google-analytics.com;
+    connect-src 'self'
+      https://*.myfilebase.com
+      https://api.filebase.io
+      https://storagex-pcy0.onrender.com
+      https://www.googleapis.com
+      https://www.google-analytics.com
+      https://analytics.google.com
+      https://stats.g.doubleclick.net
+      wss://*.myfilebase.com
+      wss://relay.walletconnect.org
+      wss://*.walletconnect.org
+      wss://*.walletconnect.com
+      https://api.web3modal.org
+      https://pulse.walletconnect.org
+      https://*.walletconnect.org
+      https://*.walletconnect.com;
+    img-src 'self' data: blob: https://*.myfilebase.com https://i.ibb.co https://static.cdnlogo.com https://www.google-analytics.com https://crust.network https://upload.wikimedia.org;
+    media-src 'self' https://*.myfilebase.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' data: https://fonts.gstatic.com;
+    frame-src 'self' https://accounts.google.com;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+    upgrade-insecure-requests;
   "
     />
   </head>
