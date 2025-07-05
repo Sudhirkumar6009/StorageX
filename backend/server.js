@@ -23,8 +23,9 @@ app.use(
       "http://localhost:3000",
       "http://192.168.180.136:8080",
       "capacitor://localhost",
+      "https://storagex-pcy0.onrender.com/",
       "https://*.vercel.app",
-      "https://storagex.netlify.app", // If you're using Netlify
+      "https://storagex.netlify.app",
       "*",
     ],
     credentials: true,

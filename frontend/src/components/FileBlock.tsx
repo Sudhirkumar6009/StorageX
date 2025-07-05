@@ -343,33 +343,23 @@ const FileBlock: React.FC<FileBlockProps> = ({
       <div
         className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent px-3 py-2 z-20"
         style={{
-          opacity: isHovered ? 1 : 0,
           transition: 'opacity 500ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
           pointerEvents: isHovered ? 'auto' : 'none',
         }}
       >
-        <div
-          className="flex items-center justify-between"
-          style={{
-            transform: isHovered ? 'translateY(0)' : 'translateY(10px)',
-            transition: 'transform 500ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
-            opacity: isHovered ? 1 : 0,
-          }}
-        >
-          <button
-            onClick={handleView}
-            className="p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
-          >
-            <Eye size={16} />
-          </button>
+        <div className="flex items-center justify-between">
           <div
-            className={`text-xs text-center flex-1 mx-2 text-foreground font-medium font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
+            style={{
+              transform: isHovered ? 'translateY(0)' : 'translateY(5px)',
+              transition: 'transform 200ms',
+            }}
+            className={`text-xs font-bold text-center flex-1 mx-2 text-foreground font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
           >
             {size}
           </div>
           <button
             onClick={handleDelete}
-            className="p-2 bg-destructive text-destructive-foreground rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
+            className="p-2 bg-destructive text-destructive-foreground rounded-[30%] shadow-lg hover:scale-110 transition-transform duration-200"
           >
             <Trash2 size={16} />
           </button>
