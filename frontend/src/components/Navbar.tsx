@@ -327,18 +327,15 @@ const Navbar = () => {
                 <Link to="/signup" className="flex items-center h-full">
                   <Button
                     variant="outline"
-                    className={`bg-[#00BFFF] rounded-none px-10 mr-5 border-0 font-normal transition-colors duration-200
+                    className={`rounded-none border-0 font-normal sm:mr-5 capitalize transition-colors duration-200
                       ${
                         theme === 'dark'
-                          ? 'text-black hover:bg-[#0099CC] hover:text-black'
-                          : 'text-black hover:text-[#00BFFF]'
+                          ? 'bg-transparent text-white hover:text-[#00BFFF]'
+                          : 'bg-transparent text-black hover:text-[#00BFFF]'
                       }
-                      font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider
+                      font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest
                     `}
                     style={{
-                      minHeight: '64px',
-                      height: '100%',
-                      fontSize: '1.1rem',
                       textTransform: 'none',
                     }}
                   >
