@@ -43,8 +43,8 @@
     connect-src 'self' http://localhost:3001 https://*.myfilebase.com https://api.filebase.io https://storagex-pcy0.onrender.com https://www.googleapis.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net wss://*.myfilebase.com wss://relay.walletconnect.org wss://*.walletconnect.org wss://*.walletconnect.com https://api.web3modal.org https://pulse.walletconnect.org https://*.walletconnect.org https://*.walletconnect.com;
     img-src 'self' https://*.myfilebase.com https://i.ibb.co https://static.cdnlogo.com https://www.google-analytics.com https://crust.network https://upload.wikimedia.org data:;
     media-src 'self' https://*.myfilebase.com;
-    style-src 'self' 'unsafe-inline';
-    font-src 'self' data:;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' data: https://fonts.gstatic.com;
   "
     />
   </head>

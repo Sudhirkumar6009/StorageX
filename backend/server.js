@@ -14,25 +14,7 @@ import googleAccount from "./Signin/googleAccount.js";
 dotenv.config({ path: "./.env" });
 
 const app = express();
-app.use(
-  cors({
-    origin: [
-      "https://storage-x-47xm.vercel.app", // Removed trailing slash!
-      "https://storage-x-lilac.vercel.app",
-      "http://localhost:8080",
-      "http://localhost:3000",
-      "http://192.168.180.136:8080",
-      "capacitor://localhost",
-      "https://storagex-pcy0.onrender.com/",
-      "https://*.vercel.app",
-      "https://storagex.netlify.app",
-      "*",
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
-  })
-);
+app.use(cors());
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
