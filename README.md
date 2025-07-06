@@ -18,8 +18,10 @@ A Decentralized , encrypted and user-friendly file storage platform powered by W
 
 ---
 
-## checkout latest Deployment
+## Checkout latest Deployment
+
 https://storage-x-47xm.vercel.app/
+
 *Deployment of backend on render and frontend on vercel*
 
 ---
