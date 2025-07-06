@@ -1,1 +1,106 @@
-# Welcome to your Lovable project ## Project info **URL**: https://lovable.dev/projects/2de0bbfe-8724-4356-a03c-586d03fe200d ## How can I edit this code? There are several ways of editing your application. **Use Lovable** Simply visit the [Lovable Project](https://lovable.dev/projects/2de0bbfe-8724-4356-a03c-586d03fe200d) and start prompting. Changes made via Lovable will be committed automatically to this repo. **Use your preferred IDE** If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable. The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating) Follow these steps: ```sh # Step 1: Clone the repository using the project's Git URL. git clone <YOUR_GIT_URL> # Step 2: Navigate to the project directory. cd <YOUR_PROJECT_NAME> # Step 3: Install the necessary dependencies. npm i # Step 4: Start the development server with auto-reloading and an instant preview. npm run dev ``` **Edit a file directly in GitHub** - Navigate to the desired file(s). - Click the "Edit" button (pencil icon) at the top right of the file view. - Make your changes and commit the changes. **Use GitHub Codespaces** - Navigate to the main page of your repository. - Click on the "Code" button (green button) near the top right. - Select the "Codespaces" tab. - Click on "New codespace" to launch a new Codespace environment. - Edit files directly within the Codespace and commit and push your changes once you're done. ## What technologies are used for this project? This project is built with: - Vite - TypeScript - React - shadcn-ui - Tailwind CSS ## How can I deploy this project? Simply open [Lovable](https://lovable.dev/projects/2de0bbfe-8724-4356-a03c-586d03fe200d) and click on Share -> Publish. ## Can I connect a custom domain to my Lovable project? Yes, you can! To connect a domain, navigate to Project > Settings > Domains and click Connect Domain. Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide) "# StorageX"
+# StorageX
+
+A Decentralized , encrypted and user-friendly file storage platform powered by Web3 and IPFS Technology.
+
+---
+## Overview
+**StorageX** is a cutting-edge file storage DApp (Decentralized Application) that leverages **IPFS** (InterPlanetary File System), **blockchain authentication**, and modern front-end technologies to provide a private, censorship-resistant, and permanent way to store and access files.
+
+---
+## Features
+
+- **Wallet based File Uploads**
+- **Decentralized Storage with IPFS**
+- **Blockchain Wallet-Based Web3Auth support**
+- **Own Your Data — No Central Authority**
+- **Open-Source and Modular**
+- **Modern UI with React + TypeScript**
+
+---
+## 🛠 Tech Stack
+
+| Layer         | Technologies Used                    |
+|---------------|---------------------------------------|
+| Frontend      | React.js, TypeScript, Tailwind CSS    |
+| Web3/Auth     | Web3Auth, Ethereum mainnet / Polygon  |
+| Storage       | IPFS (via Crust Network Gateway)      |
+| Smart Contracts | Solidity (optional integration)      |
+| Backend       | IPFS APIs (no traditional server)     |
+| Wallets       | Metamask, WalletConnect               |
+
+---
+This project provides facility to create resume with selection from given 3 templates.
+Where we focuses to distribution client and server directory separation for better readability.  
+
+
+## Project Structure
+`./server` consists proper backend infrastructure (built with MongoDB Atllas, Node + express.js)
+`./client` consists frontend structure (built with React.js Tech)
+
+---
+
+## Getting Started
+
+Follow these steps to run the project locally.
+
+---
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm (Node Package Manager)
+- MongoDB (local or Atlas)
+
+---
+
+## Overview of project
+
+1. **Clone the repository**
+```cmd
+git clone https://github.com/Sudhirkumar6009/Resume-Builder.git
+```
+2. **put cmd in root directory. Then create node modules for both directories `./server` and `./client`**
+```cmd
+cd ./Resume-Builder
+
+cd ./server
+npm install
+
+
+cd ../
+
+cd ./client
+npm install
+```
+
+3. **Running the Project**
+Use two separate terminals to run the frontend and backend.
+
+3.1. Start Backend (Server)
+```cmd
+cd ./server
+npm nodemon
+```
+Backend will run at port 5000
+(If you don't have nodemon: npm install -g nodemon)
+
+`cd ../` (come agian to root directory)
+
+3.2. Start Frontend (Client)
+```cmd
+cd ./client
+npm run dev
+```
+Frontend will run at: `http://localhost:8080`
+(Future Enhancement Idea : We can also put this as environment variable for proper pratice)
+
+### Environment Variables
+Created .env in `./server` with:
+```cmd
+MONGO_URI=mongodb+srv://sudhirkumarkiller1011:0Q0eIu7IkUMfgQcr@resumebuilder.ymfjyyh.mongodb.net/?retryWrites=true&w=majority&appName=ResumeBuilder
+```
+
+### Contact
+For questions or issues,
+MAIL ME : sudhir.kuchara@gmail.com :)
+
