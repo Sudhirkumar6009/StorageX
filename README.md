@@ -10,7 +10,7 @@ A Decentralized , encrypted and user-friendly file storage platform powered by W
 ## Features
 
 - **Wallet based File Uploads**
-- **Decentralized Storage with IPFS**
+- **Fully Decentralized Storage with IPFS Tech**
 - **Blockchain Wallet-Based Web3Auth support**
 - **Own Your Data — No Central Authority**
 - **Open-Source and Modular**
@@ -23,12 +23,21 @@ A Decentralized , encrypted and user-friendly file storage platform powered by W
 |---------------|---------------------------------------|
 | Frontend      | React.js, TypeScript, Tailwind CSS    |
 | Web3/Auth     | Web3Auth, Ethereum mainnet / Polygon  |
-| Storage       | IPFS (via Crust Network Gateway)      |
-| Smart Contracts | Solidity (optional integration)      |
-| Backend       | IPFS APIs (no traditional server)     |
+| Storage       | Filebase (IPFS), Crust Network Gateway)|
+| Smart Contracts | Solidity (optional integration) *Not Implemented yet*       |
+| Backend       | Node.js and Filebase API     |
 | Wallets       | Metamask, WalletConnect               |
+| Authentication| Web2.0 for Google Auth users               |
+|Metadata management| MongoDB Atlas|
 
 ---
+
+## Getting Started
+### 1. Clone the Repo.
+Follow command :
+```bash
+git clone https://github.com/Sudhirkumar6009/StorageX.git
+```
 This project provides facility to create resume with selection from given 3 templates.
 Where we focuses to distribution client and server directory separation for better readability.  
 
