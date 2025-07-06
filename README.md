@@ -17,6 +17,13 @@ A Decentralized , encrypted and user-friendly file storage platform powered by W
 - **Modern UI with React + TypeScript**
 
 ---
+
+## checkout latest Deployment
+https://storage-x-47xm.vercel.app/
+*Deployment of backend on render and frontend on vercel*
+
+---
+
 ## 🛠 Tech Stack
 
 | Layer         | Technologies Used                    |
