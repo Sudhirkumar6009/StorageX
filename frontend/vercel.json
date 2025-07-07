@@ -9,7 +9,7 @@
         },
         {
           "key": "X-Frame-Options",
-          "value": "DENY"
+          "value": "SAMEORIGIN"
         },
         {
           "key": "X-XSS-Protection",
@@ -21,15 +21,9 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; connect-src 'self' https://*.filebase.com https://*.web3auth.io https://*.ethereum.org https://*.polygon.technology https://*.infura.io https://*.alchemy.com wss://*.infura.io wss://*.alchemy.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.web3auth.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
+          "value": "default-src 'self'; connect-src 'self' https://*.onrender.com https://*.filebase.com https://*.web3auth.io https://*.ethereum.org https://*.polygon.technology https://*.infura.io https://*.alchemy.com https://accounts.google.com https://www.googleapis.com wss://*.infura.io wss://*.alchemy.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.web3auth.io https://accounts.google.com https://www.gstatic.com blob:; script-src-elem 'self' 'unsafe-inline' https://*.web3auth.io https://accounts.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; object-src 'none'; base-uri 'self'; frame-src 'self' https://accounts.google.com https://*.web3auth.io; worker-src 'self' blob:;"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
     }
   ]
 }
