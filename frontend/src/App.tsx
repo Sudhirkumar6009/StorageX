@@ -69,7 +69,7 @@ const App = () => (
                                 path="/dashboard"
                                 element={
                                   <ProtectedRoute>
-                                    <DashDemo />
+                                    <Dashboard />
                                   </ProtectedRoute>
                                 }
                               />
