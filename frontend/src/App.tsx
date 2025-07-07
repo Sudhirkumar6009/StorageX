@@ -18,6 +18,7 @@ import { WagmiProvider, createConfig, http } from 'wagmi';
 import { mainnet, sepolia } from 'wagmi/chains';
 import { BackTopContext } from './contexts/BackTopContext.js';
 import Dashboard from './pages/Dashboard';
+import DashDemo from './pages/DashDemo';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { WalletConnectProviderComponent } from './contexts/WalletConnectContext';
 import {
@@ -68,7 +69,7 @@ const App = () => (
                                 path="/dashboard"
                                 element={
                                   <ProtectedRoute>
-                                    <Dashboard />
+                                    <DashDemo />
                                   </ProtectedRoute>
                                 }
                               />

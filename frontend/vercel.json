@@ -1,13 +1,8 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * data: blob: 'unsafe-inline' 'unsafe-eval'; connect-src * data: blob: 'unsafe-inline' 'unsafe-eval'; img-src * data: blob: 'unsafe-inline'; media-src * data: blob: 'unsafe-inline'; style-src * data: blob: 'unsafe-inline'; font-src * data: blob: 'unsafe-inline'; frame-src * data: blob: 'unsafe-inline';"
-        },
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
@@ -25,18 +20,16 @@
           "value": "strict-origin-when-cross-origin"
         },
         {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET,POST,PUT,DELETE,OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "*"
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; connect-src 'self' https://*.filebase.com https://*.web3auth.io https://*.ethereum.org https://*.polygon.technology https://*.infura.io https://*.alchemy.com wss://*.infura.io wss://*.alchemy.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.web3auth.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
         }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

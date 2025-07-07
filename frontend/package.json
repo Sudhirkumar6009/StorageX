@@ -19,6 +19,7 @@
     "@metamask/jazzicon": "^2.0.0",
     "@mui/icons-material": "^7.1.2",
     "@mui/material": "^7.1.0",
+    "@polkadot/extension-dapp": "^0.61.2",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -56,6 +57,7 @@
     "@web3modal/wagmi": "^5.1.11",
     "axios": "^1.9.0",
     "bootstrap": "^5.3.6",
+    "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -70,6 +72,7 @@
     "gsap": "^3.13.0",
     "helia": "^5.4.2",
     "input-otp": "^1.2.4",
+    "ipfs-http-client": "^60.0.1",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.462.0",
     "mongodb": "^6.16.0",
@@ -99,6 +102,7 @@
     "wagmi": "^2.15.6",
     "web3": "^4.16.0",
     "web3.storage": "^4.5.5",
+    "web3modal": "^1.9.12",
     "zod": "^3.23.8"
   },
   "devDependencies": {
