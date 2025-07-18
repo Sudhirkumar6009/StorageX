@@ -42,6 +42,7 @@ router.post("/api/store-address", async (req, res) => {
     const newDoc = {
       email: email || "Not Provided",
       Wallet,
+      public: req.body.public,
       updatedAt: new Date(),
       storage: [],
     };

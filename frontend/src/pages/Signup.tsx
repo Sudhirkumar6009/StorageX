@@ -11,6 +11,8 @@ import Tooltip from '@mui/material/Tooltip';
 import { useWeb3 } from '../contexts/Web3Context';
 import { OrbitProgress, Riple } from 'react-loading-indicators';
 import { useGoogleLogin } from '@react-oauth/google';
+import TextField from '@mui/material/TextField';
+
 import {
   X,
   ArrowRightFromLine,
@@ -22,6 +24,176 @@ import { userInfo } from 'os';
 import { useAuth } from '@/contexts/AuthContext.js';
 import { useProfile } from '@/contexts/ProfileContext';
 import { form } from 'viem/chains';
+import {
+  createCustomWallet,
+  storePublicAddress,
+} from '../Utils/AccountContext.js';
+
+const WalletModal = ({ wallet, onNext }) => (
+  <div
+    style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'rgba(0,0,0,0.5)',
+      zIndex: 10000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}
+  >
+    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md w-full shadow-lg">
+      <h2 className="text-xl font-bold mb-4 text-center text-blue-600">
+        Wallet Created
+      </h2>
+      <div className="mb-2">
+        <b>Address:</b> <span className="break-all">{wallet.address}</span>
+      </div>
+      <div className="mb-2">
+        <b>Mnemonic:</b> <span className="break-all">{wallet.mnemonic}</span>
+      </div>
+      <div className="mb-2">
+        <b>Private Key:</b>{' '}
+        <span className="break-all">{wallet.privateKey}</span>
+      </div>
+      <div className="text-xs text-red-600 mt-2">
+        Save these details securely. They will not be shown again!
+      </div>
+      <Button className="mt-4 w-full" onClick={onNext}>
+        Continue
+      </Button>
+    </div>
+  </div>
+);
+
+const MnemonicModal = ({ onVerify, onCancel }) => {
+  const { theme } = useTheme();
+  const [inputMnemonic, setInputMnemonic] = useState('');
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(0,0,0,0.5)',
+        zIndex: 10001,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md w-full shadow-lg">
+        <h2
+          className={`text-xl font-bold mb-4 text-center text-[#00bfff] font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
+        >
+          Verify Mnemonic
+        </h2>
+        <TextField
+          id="Name"
+          label="Mnemoric Phrase"
+          margin="normal"
+          type="address"
+          size="medium"
+          value={inputMnemonic}
+          onChange={(e) => setInputMnemonic(e.target.value)}
+          multiline
+          minRows={2}
+          maxRows={4}
+          sx={{
+            transition: 'all 0.3s ease',
+            marginBottom: '2rem',
+            width: '100%',
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                border: '1px solid gray',
+              },
+              '&:hover fieldset': {
+                border: '1px solid white',
+              },
+              '&.Mui-focused fieldset': {
+                border: '2px solid #00BFFF',
+                // Add more padding to prevent label text cutting
+                borderRadius: '8px',
+                legend: {
+                  width: 'auto',
+                  padding: '0 10px', // Add horizontal padding to prevent text cutting
+                  fontSize: '0.85em',
+                },
+              },
+              textarea: {
+                // Change from input to textarea for multiline
+                color: theme === 'dark' ? '#FFFFFF' : '#000000',
+                fontFamily:
+                  '"Century Gothic", CenturyGothic, AppleGothic, sans-serif',
+                fontSize: '1rem',
+                fontWeight: 400,
+                letterSpacing: '0.05em',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              color: '#fff',
+              fontFamily:
+                '"Century Gothic", CenturyGothic, AppleGothic, sans-serif',
+              letterSpacing: '0.1rem',
+              '&.Mui-focused': {
+                paddingLeft: '0.3rem', // Added left padding
+                color: '#00BFFF',
+                backgroundColor:
+                  theme === 'dark' ? 'transparent' : 'rgba(255,255,255,0.8)',
+                borderRadius: '4px',
+              },
+              // Add more space for label when focused
+              '&.MuiFormLabel-filled': {
+                backgroundColor:
+                  theme === 'dark' ? 'transparent' : 'rgba(255,255,255,0.8)',
+                borderRadius: '4px',
+              },
+            },
+          }}
+        />
+        <Button
+          style={{
+            height: '75px',
+            fontSize: '1.2rem',
+          }}
+          className={`w-full rounded-lg border transition-all duration-300 ease-in-out
+    hover:scale-105 hover:shadow-lg 
+    ${
+      theme === 'dark'
+        ? 'bg-[#00BFFF] text-black hover:bg-[#0099CC] hover:text-black'
+        : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
+    }
+  `}
+          onClick={() => onVerify(inputMnemonic)}
+        >
+          Verify
+        </Button>
+        <Button
+          style={{
+            height: '75px',
+            marginTop: '1rem',
+            fontSize: '1.2rem',
+          }}
+          className={`w-full rounded-lg  
+    ${
+      theme === 'dark'
+        ? 'bg-black text-white border-[#00bfff] hover:bg-transparent hover:text-white hover:border-[#00bfff]'
+        : 'bg-[#00BFFF] text-black hover:bg-[#0099CC]'
+    }
+  `}
+          variant="outline"
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const Signup = () => {
   const { theme } = useTheme();
@@ -43,6 +215,12 @@ const Signup = () => {
   const [formData, setFormData] = useState({
     email: '',
   });
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [mnemonicModalOpen, setMnemonicModalOpen] = useState(false);
+  const [pendingWallet, setPendingWallet] = useState(null);
+  const [existingPublicKey, setExistingPublicKey] = useState('');
+  const [isNewAccount, setIsNewAccount] = useState(true);
+
   const closeWcEmailReq = () => {
     setWcConnectClicked(false);
     setWcEmail('');
@@ -135,6 +313,7 @@ const Signup = () => {
     },
   });
 
+  // Modified account creation logic
   const handleCreateAccount = async () => {
     if (!isConnected && !wcIsConnected) {
       sendToast();
@@ -167,83 +346,148 @@ const Signup = () => {
       );
       const data = await res.json();
 
-      if (data.success) {
-        // 2. If account exists, login
-        await login(walletAddress, loginType);
-        await fetchAndSetProfileImage(walletAddress, loginType);
-        toast({
-          title: 'Login Successful',
-          className:
-            'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
-          description: `Welcome back, ${
-            walletAddress.slice(0, 6) + '...' + walletAddress.slice(-5)
-          }`,
-        });
-        navigate('/dashboard');
+      if (data.success && data.profile && data.profile.public) {
+        // Account exists: ask for mnemonic and match with public key
+        setIsNewAccount(false);
+        setExistingPublicKey(data.profile.public);
+        setMnemonicModalOpen(true);
       } else {
-        // 3. If not found, create account then login
-        const createRes = await fetch(
-          `${import.meta.env.VITE_BACKEND_PORT_URL}/api/store-address`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: emailToUse, // Use the email based on connection type
-              Wallet: walletAddress,
-            }),
-          }
-        );
-        const createData = await createRes.json();
-
-        if (createData.success) {
-          await login(walletAddress, loginType);
-          await fetchAndSetProfileImage(walletAddress, loginType);
-          toast({
-            title: 'Account Created & Logged In',
-            className:
-              'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
-            description: 'Your account was created and you are now logged in.',
-            variant: 'default',
-            duration: 3000,
-          });
-          navigate('/dashboard');
-        } else if (createData.exists) {
-          // Defensive: fallback if race condition
-          await login(walletAddress, loginType);
-          await fetchAndSetProfileImage(walletAddress, loginType);
-          toast({
-            title: 'Login Successful',
-            className:
-              'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wider',
-            description: `Welcome back, ${
-              walletAddress.slice(0, 6) + '...' + walletAddress.slice(-5)
-            }`,
-            variant: 'default',
-            duration: 3000,
-          });
-          navigate('/dashboard');
-        } else {
-          toast({
-            title: 'Error Creating Account',
-            className:
-              'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
-            description: createData.message || 'Failed to create account.',
-            variant: 'destructive',
-            duration: 3000,
-          });
-        }
+        // New account: create wallet and show modal
+        setIsNewAccount(true);
+        const wallet = createCustomWallet();
+        setPendingWallet(wallet);
+        setWalletModalOpen(true);
       }
     } catch (error: any) {
       toast({
         title: 'Error',
-        className:
-          'font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider',
         description: error.message || 'Failed to login or create account.',
         variant: 'destructive',
         duration: 3000,
       });
     } finally {
       setLoadingCreation(false);
+    }
+  };
+
+  // Called after user clicks "Continue" in WalletModal (for new account)
+  const handleWalletModalNext = () => {
+    setWalletModalOpen(false);
+    setMnemonicModalOpen(true);
+  };
+
+  // Called after user enters mnemonic and clicks "Verify"
+  const handleMnemonicVerify = async (inputMnemonic: string) => {
+    setLoadingCreation(true);
+
+    if (isNewAccount) {
+      // For new account: verify mnemonic and store keys
+      if (!pendingWallet) return;
+      if (inputMnemonic.trim() !== pendingWallet.mnemonic.trim()) {
+        toast({
+          title: 'Mnemonic Incorrect',
+          description: 'The entered mnemonic does not match. Please try again.',
+          variant: 'destructive',
+          duration: 3000,
+        });
+        setLoadingCreation(false);
+        return;
+      }
+      setMnemonicModalOpen(false);
+
+      // Store public and private key in MongoDB
+      try {
+        const result = await storePublicAddress(formData.email, {
+          Wallet: address,
+          public: pendingWallet.address,
+          private: pendingWallet.privateKey,
+        });
+        if (result.success) {
+          toast({
+            title: 'Account Created Successfully',
+            description: 'Your new wallet has been created and stored.',
+            variant: 'default',
+            duration: 3000,
+          });
+          await login(address, 'metamask');
+          navigate('/dashboard');
+        } else if (result.exists) {
+          toast({
+            title: 'Account Already Exists',
+            description:
+              'An account with this MetaMask address already exists.',
+            variant: 'destructive',
+            duration: 5000,
+          });
+        } else {
+          toast({
+            title: 'Error Creating Account',
+            description: result.message || 'Failed to store wallet address.',
+            variant: 'destructive',
+            duration: 3000,
+          });
+        }
+      } catch (error: any) {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to create wallet',
+          variant: 'destructive',
+          duration: 3000,
+        });
+      } finally {
+        setLoadingCreation(false);
+        setPendingWallet(null);
+      }
+    } else {
+      // For existing account: verify mnemonic and match public key
+      try {
+        const { ethers } = await import('ethers');
+        let walletFromMnemonic;
+        try {
+          walletFromMnemonic = ethers.Wallet.fromPhrase(inputMnemonic.trim());
+        } catch {
+          toast({
+            title: 'Invalid Mnemonic',
+            description: 'Could not generate wallet from mnemonic.',
+            variant: 'destructive',
+            duration: 3000,
+          });
+          setLoadingCreation(false);
+          return;
+        }
+        if (
+          walletFromMnemonic.address.toLowerCase() !==
+          existingPublicKey.toLowerCase()
+        ) {
+          toast({
+            title: 'Mnemonic/Public Key Mismatch',
+            description:
+              'Mnemonic does not match the public key stored for this account.',
+            variant: 'destructive',
+            duration: 3000,
+          });
+          setLoadingCreation(false);
+          return;
+        }
+        setMnemonicModalOpen(false);
+        toast({
+          title: 'Login Successful',
+          description: 'Mnemonic verified and matched with public key.',
+          variant: 'default',
+          duration: 3000,
+        });
+        await login(address, 'metamask');
+        navigate('/dashboard');
+      } catch (error: any) {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to verify mnemonic',
+          variant: 'destructive',
+          duration: 3000,
+        });
+      } finally {
+        setLoadingCreation(false);
+      }
     }
   };
 
@@ -355,8 +599,24 @@ const Signup = () => {
                   {isConnected && (
                     <button
                       type="button"
-                      onClick={() => disconnectWallet()}
-                      className="absolute top-1/2 right-3 transform -translate-y-1/2 w-6 h-6 p-1 bg-red-600 transparent hover:bg-red-700 text-white rounded flex items-center justify-center transition-all duration-200 shadow-md"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        try {
+                          disconnectWallet();
+                          setConnectClicked(false);
+                          setFormData({ email: '' });
+                        } catch (error) {
+                          console.error('Disconnect error:', error);
+                          toast({
+                            title: 'Disconnect Failed',
+                            description: 'Please try again or refresh the page',
+                            variant: 'destructive',
+                            duration: 3000,
+                          });
+                        }
+                      }}
+                      className="absolute top-1/2 right-3 transform -translate-y-1/2 w-6 h-6 p-1 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-all duration-200 shadow-md z-10"
                       title="Disconnect wallet"
                     >
                       <X size={13} />
@@ -694,6 +954,15 @@ const Signup = () => {
             <Riple color="#00bfff" size="medium" text="" textColor="" />
           </div>
         </div>
+      )}
+      {walletModalOpen && pendingWallet && (
+        <WalletModal wallet={pendingWallet} onNext={handleWalletModalNext} />
+      )}
+      {mnemonicModalOpen && (
+        <MnemonicModal
+          onVerify={handleMnemonicVerify}
+          onCancel={() => setMnemonicModalOpen(false)}
+        />
       )}
     </div>
   );

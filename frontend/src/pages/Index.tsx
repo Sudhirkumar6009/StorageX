@@ -41,7 +41,7 @@ const Index = () => {
         setGridSize(5); // Large screens
         setMaxAngle(200);
         setgridRows(5);
-        setgridCols(5);
+        setgridCols(8);
       }
     };
 

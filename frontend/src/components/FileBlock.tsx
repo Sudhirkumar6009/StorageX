@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileIcon,
   Eye,
@@ -10,11 +10,16 @@ import {
   FileChartPie,
   FileSpreadsheet,
   FileArchive,
+  Download,
+  Loader2,
 } from 'lucide-react';
 import ReactPlayer from 'react-player';
 import { Viewer, Worker } from '@react-pdf-viewer/core';
-
-// Import just core styles, not default layout styles
+import {
+  fetchAndDecryptFile,
+  guessFileType,
+  isImageType,
+} from '../Utils/DecryptionLogic';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 
 interface FileBlockProps {
@@ -32,9 +37,15 @@ interface FileBlockProps {
     | 'audio'
     | 'other';
   thumbnail?: string;
-  cid?: string; // Add CID to the interface
+  cid?: string;
+  onDecrypt?: () => void;
+  isEncrypted?: boolean;
   onView: (file: any) => void;
   onDelete: (id: string) => void;
+  originalName?: string;
+  originalType?: string;
+  decryptedUrl?: string;
+  isDecrypting?: boolean;
 }
 
 const FileBlock: React.FC<FileBlockProps> = ({
@@ -46,9 +57,64 @@ const FileBlock: React.FC<FileBlockProps> = ({
   cid,
   onView,
   onDelete,
+  onDecrypt,
+  isEncrypted = false,
+  originalName,
+  originalType,
+  decryptedUrl: propDecryptedUrl,
+  isDecrypting: propIsDecrypting = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [thumbnailError, setThumbnailError] = useState(false);
+  const [decryptedUrl, setDecryptedUrl] = useState<string | null>(
+    propDecryptedUrl || null
+  );
+  const [decrypting, setDecrypting] = useState(propIsDecrypting);
+
+  // Get the true original name (removing .encrypted extension if needed)
+  const trueOriginalName =
+    originalName ||
+    (isEncrypted && name.endsWith('.encrypted') ? name.slice(0, -10) : name);
+
+  // Get the true file type based on original name
+  const trueFileType =
+    originalType || (trueOriginalName ? guessFileType(trueOriginalName) : null);
+
+  // Auto-decrypt if file is encrypted and we have the mnemonic
+  useEffect(() => {
+    if (propDecryptedUrl) {
+      setDecryptedUrl(propDecryptedUrl);
+      setDecrypting(false);
+      return;
+    }
+    const decryptFileForDisplay = async () => {
+      if (isEncrypted && cid) {
+        const mnemonic = localStorage.getItem('encrypted_mnemonic');
+        if (!mnemonic) return;
+        try {
+          setDecrypting(true);
+          const url = await fetchAndDecryptFile(
+            cid,
+            mnemonic,
+            trueOriginalName,
+            trueFileType
+          );
+          setDecryptedUrl(url);
+        } catch (error) {
+          console.error('Error decrypting file for display:', error);
+          setThumbnailError(true);
+        } finally {
+          setDecrypting(false);
+        }
+      }
+    };
+    decryptFileForDisplay();
+    return () => {
+      if (decryptedUrl && !propDecryptedUrl) {
+        URL.revokeObjectURL(decryptedUrl);
+      }
+    };
+  }, [cid, isEncrypted, trueOriginalName, trueFileType, propDecryptedUrl]);
 
   const fileConfig = {
     image: {
@@ -98,22 +164,52 @@ const FileBlock: React.FC<FileBlockProps> = ({
     },
   };
 
-  const config = fileConfig[type] || fileConfig.other;
+  // Improved type detection for encrypted files
+  const getDisplayType = () => {
+    if (isEncrypted && trueFileType) {
+      // If we have a decrypted file, use the original file type to determine display type
+      if (trueFileType.startsWith('image/')) return 'image';
+      if (trueFileType.startsWith('video/')) return 'video';
+      if (trueFileType.startsWith('audio/')) return 'audio';
+      if (trueFileType === 'application/pdf') return 'pdf';
+    }
+    return type; // Fall back to the prop type if not encrypted or no original type
+  };
 
-  // Create the file URL from CID
-  const fileUrl = cid
-    ? `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${cid}`
-    : thumbnail || '';
+  const displayType = getDisplayType();
+  const config = fileConfig[displayType] || fileConfig.other;
+
+  const fileUrl =
+    decryptedUrl ||
+    (cid && !isEncrypted
+      ? `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${cid}`
+      : thumbnail || '');
 
   const handleView = () => {
+    let viewType = type;
+    if (isEncrypted && decryptedUrl && trueFileType) {
+      if (trueFileType.startsWith('image/')) {
+        viewType = 'image';
+      } else if (trueFileType.startsWith('video/')) {
+        viewType = 'video';
+      } else if (trueFileType.startsWith('audio/')) {
+        viewType = 'audio';
+      } else if (trueFileType === 'application/pdf') {
+        viewType = 'pdf';
+      }
+    }
     onView({
       id,
-      name,
+      name: isEncrypted ? trueOriginalName : name,
       size,
-      type,
-      thumbnail: fileUrl,
+      type: viewType,
+      thumbnail: decryptedUrl || fileUrl,
       cid,
       key: name,
+      isEncrypted,
+      originalName: trueOriginalName,
+      originalType: trueFileType,
+      decryptedUrl,
     });
   };
 
@@ -122,8 +218,18 @@ const FileBlock: React.FC<FileBlockProps> = ({
     onDelete(id);
   };
 
-  // Custom thumbnail based on file type
   const renderThumbnail = () => {
+    if (decrypting) {
+      return (
+        <div className="flex flex-col items-center justify-center">
+          <Loader2 size={48} className="text-blue-500 animate-spin" />
+          <div className="mt-2 text-xs font-medium text-center text-blue-500">
+            Decrypting...
+          </div>
+        </div>
+      );
+    }
+
     if (thumbnailError) {
       return (
         <div className={`flex items-center justify-center ${config.color}`}>
@@ -132,94 +238,73 @@ const FileBlock: React.FC<FileBlockProps> = ({
       );
     }
 
-    if (type === 'image' && fileUrl) {
-      return (
-        <img
-          src={fileUrl}
-          alt={name}
-          style={{
-            transition: 'all 500ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
-          }}
-          className={`object-cover ${
-            isHovered
-              ? 'w-full h-full scale-105'
-              : 'max-w-full max-h-full object-contain rounded'
-          }`}
-          onError={() => setThumbnailError(true)}
-        />
-      );
-    }
-
-    if (type === 'video' && fileUrl) {
-      const videoUrl = cid
-        ? `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${cid}`
-        : thumbnail || '';
+    // Check if this is an image - use displayType to correctly identify decrypted images
+    if (displayType === 'image' && (decryptedUrl || fileUrl)) {
+      const imageSource = decryptedUrl || fileUrl;
+      console.log('Rendering image in FileBlock:', {
+        url: imageSource,
+        originalType: trueFileType,
+        isDecrypted: !!decryptedUrl,
+      });
 
       return (
-        <div className="w-full h-full flex items-center justify-center">
-          {cid ? (
-            <div className="w-full h-full max-h-[200px] overflow-hidden">
-              <ReactPlayer
-                url={videoUrl}
-                controls
-                width="100%"
-                height="100%"
-                light={true} // This adds a thumbnail preview with play button
-                config={{
-                  file: {
-                    attributes: {
-                      controlsList: 'nodownload',
-                    },
-                  },
-                }}
-                onError={(e) => {
-                  console.error('Video failed to load:', videoUrl, e);
-                }}
-              />
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col items-center justify-center">
-                <FileVideo size={48} className="text-red-500" />
-                <div className="mt-2 text-xs font-medium text-center text-red-500 font-['Century_Gothic',CenturyGothic,AppleGothic,sans-serif] tracking-wider">
-                  VIDEO
-                </div>
-              </div>
-            </>
-          )}
+        <div className="w-full h-full flex items-center justify-center overflow-hidden">
+          <img
+            src={imageSource}
+            alt={isEncrypted ? trueOriginalName : name}
+            style={{
+              transition: 'all 500ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
+              maxWidth: '100%',
+              maxHeight: '100%',
+            }}
+            className={`object-cover ${
+              isHovered
+                ? 'w-full h-full scale-105'
+                : 'max-w-full max-h-full object-contain rounded'
+            }`}
+            onLoad={() =>
+              console.log('Image loaded in FileBlock successfully!')
+            }
+            onError={(e) => {
+              console.error('Image failed to load in FileBlock:', imageSource);
+              setThumbnailError(true);
+              e.currentTarget.onerror = null;
+            }}
+          />
         </div>
       );
     }
-
-    if (type === 'pdf' && fileUrl) {
-      const pdfUrl = cid
-        ? `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${cid}`
-        : '';
-
-      if (!pdfUrl || !isHovered) {
+    if (displayType === 'video' && fileUrl) {
+      return (
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full max-h-[200px] overflow-hidden">
+            <ReactPlayer
+              url={fileUrl}
+              controls
+              width="100%"
+              height="100%"
+              light={true}
+              config={{
+                file: {
+                  attributes: {
+                    controlsList: 'nodownload',
+                  },
+                },
+              }}
+              onError={(e) => {
+                console.error('Video failed to load:', fileUrl, e);
+                setThumbnailError(true);
+              }}
+            />
+          </div>
+        </div>
+      );
+    }
+    if (displayType === 'pdf' && fileUrl) {
+      if (!isHovered) {
         return (
           <div className="w-full h-full flex items-center justify-center overflow-hidden">
-            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-              <div
-                style={{
-                  height: '100%',
-                  width: '100%',
-                  maxHeight: '220px', // Control height to fit in card
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Viewer
-                  fileUrl={pdfUrl}
-                  defaultScale={0.4} // Smaller scale to fit in card
-                  initialPage={0}
-                  onDocumentLoad={() => {
-                    console.log('PDF loaded successfully');
-                  }}
-                />
-              </div>
-            </Worker>
+            <File size={48} className="text-red-500" />
           </div>
         );
       }
@@ -230,38 +315,30 @@ const FileBlock: React.FC<FileBlockProps> = ({
               style={{
                 height: '100%',
                 width: '100%',
-                maxHeight: '220px', // Control height to fit in card
+                maxHeight: '220px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
               <Viewer
-                fileUrl={pdfUrl}
-                defaultScale={0.4} // Smaller scale to fit in card
+                fileUrl={fileUrl}
+                defaultScale={0.4}
                 initialPage={0}
-                onDocumentLoad={() => {
-                  console.log('PDF loaded successfully');
-                }}
+                onDocumentLoad={() => console.log('PDF loaded successfully')}
               />
             </div>
           </Worker>
         </div>
       );
     }
-
-    if (type === 'audio' && fileUrl) {
-      const audioUrl = cid
-        ? `https://cooperative-salmon-galliform.myfilebase.com/ipfs/${cid}`
-        : '';
-
-      console.log('Playing audio with URL:', audioUrl);
+    if (displayType === 'audio' && fileUrl) {
       return (
         <div className="flex flex-col items-center justify-center w-full max-w-[90%]">
           <FileAudio size={48} className="text-purple-600 mb-2" />
           <div className="w-full">
             <ReactPlayer
-              url={audioUrl}
+              url={fileUrl}
               controls
               width="100%"
               height="40px"
@@ -274,21 +351,16 @@ const FileBlock: React.FC<FileBlockProps> = ({
                 },
               }}
               onError={(e) => {
-                console.error('Audio failed to load:', audioUrl, e);
+                console.error('Audio failed to load:', fileUrl, e);
+                setThumbnailError(true);
               }}
             />
           </div>
         </div>
       );
     }
-
-    // Default icon for other file types
     return (
-      <div
-        className={`transition-all duration-300 ${config.color} ${
-          isHovered ? 'scale-125' : ''
-        }`}
-      >
+      <div className={`transition-all duration-300 ${config.color}`}>
         {config.icon}
       </div>
     );
@@ -296,11 +368,9 @@ const FileBlock: React.FC<FileBlockProps> = ({
 
   return (
     <div
-      className={`relative w-full h-[250px] border-2 rounded-md cursor-pointer overflow-hidden ${config.bg} $$
-      isHovered
-        ? 'scale-105 shadow-2xl z-10'
-        : 'shadow-sm'
-    }`}
+      className={`relative w-full h-[250px] border-2 rounded-md cursor-pointer overflow-hidden ${
+        config.bg
+      } ${isHovered ? 'scale-105 shadow-2xl z-10' : 'shadow-sm'}`}
       style={{
         transition: 'all 400ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
       }}
@@ -336,7 +406,7 @@ const FileBlock: React.FC<FileBlockProps> = ({
             opacity: 1,
           }}
         >
-          {name}
+          {isEncrypted ? trueOriginalName : name}
         </div>
       </div>
 

@@ -4,9 +4,8 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "build": "npm install && npm run build",
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "concurrently \"nodemon server.js\" \"cd ../frontend && npm run dev\"",
+    "start": "node server.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

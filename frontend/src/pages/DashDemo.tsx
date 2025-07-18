@@ -1,346 +1,501 @@
-import React, { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
-import { create } from 'ipfs-http-client';
-import { Buffer } from 'buffer'; // Add this import for browser compatibility
+// src/components/DashDemo.tsx
 
-// List of IPFS gateways to try, starting with CORS-enabled ones
-const IPFS_GATEWAYS = [
-  'https://ipfs-w3auth.crustapps.io/api/v0', // CORS-enabled gateway (first priority)
-  'https://gw.crustfiles.app/api/v0',
-  'https://crustipfs.xyz/api/v0',
-  'https://ipfs.filebase.io/api/v0',
-];
+import React, { useState, useEffect } from 'react';
+import { ApiPromise, WsProvider } from '@polkadot/api';
+import { typesBundleForPolkadot } from '@crustio/type-definitions';
+import { create } from 'ipfs-http-client';
+import { Buffer } from 'buffer';
+
+// Polyfill for browser environment
+if (typeof window !== 'undefined') {
+  window.Buffer = window.Buffer || Buffer;
+}
+
+// Configuration
+const POLKADOT_WSS_ENDPOINT = 'wss://rpc.polkadot.io'; // Main Polkadot network
+const IPFS_GATEWAY_URL = 'https://crustipfs.xyz/api/v0';
+// Alternative gateways if needed:
+// const IPFS_GATEWAY_URL = 'https://gw.crustfiles.app/api/v0';
+// const IPFS_GATEWAY_URL = 'https://pin.crustcode.com/api/v0';
+
+type UploadState =
+  | 'Idle'
+  | 'Connecting'
+  | 'Uploading'
+  | 'PlacingOrder'
+  | 'Success'
+  | 'Error';
 
 const DashDemo: React.FC = () => {
-  const [account, setAccount] = useState<string>('');
-  const [files, setFiles] = useState<
-    Array<{ cid: string; name: string; size: string; requestId: string }>
-  >([]);
-  const [uploading, setUploading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  // State Management
+  const [publicKey, setPublicKey] = useState<string>('');
   const [signature, setSignature] = useState<string>('');
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [currentGateway, setCurrentGateway] = useState<string>(
-    IPFS_GATEWAYS[0]
-  );
+  const [api, setApi] = useState<ApiPromise | null>(null);
+  const [status, setStatus] = useState<UploadState>('Idle');
+  const [progress, setProgress] = useState<number>(0);
+  const [file, setFile] = useState<File | null>(null);
+  const [fileCid, setFileCid] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [uploadedFiles, setUploadedFiles] = useState<
+    Array<{ name: string; cid: string; size: number }>
+  >([]);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
 
-  // Connect MetaMask wallet
-  const connectWallet = async () => {
-    setError('');
+  // Connect to Crust Network
+  const connectToNetwork = async () => {
+    if (api) return; // Already connected
+
+    setStatus('Connecting');
     try {
-      if (!window.ethereum) {
-        throw new Error('MetaMask not detected. Please install MetaMask.');
+      console.log('Connecting to Polkadot Network...');
+      const wsProvider = new WsProvider(POLKADOT_WSS_ENDPOINT);
+      const polkadotApi = await ApiPromise.create({
+        provider: wsProvider,
+        // Remove Crust-specific type bundle if it's not compatible with Polkadot
+        // typesBundle: typesBundleForPolkadot,
+      });
+
+      await polkadotApi.isReady;
+      setApi(polkadotApi);
+      setIsConnected(true);
+      setStatus('Idle');
+      console.log('Connected to Polkadot Network!');
+    } catch (err) {
+      console.error('API Initialization Error:', err);
+      setStatus('Error');
+      setErrorMessage('Failed to connect to Polkadot Network.');
+    }
+  };
+
+  // Disconnect on unmount
+  useEffect(() => {
+    return () => {
+      if (api) {
+        console.log('Disconnecting from Crust Network');
+        api.disconnect();
       }
+    };
+  }, [api]);
 
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts',
-      });
-      const address = accounts[0];
-      setAccount(address);
-
-      // Sign address for authentication
-      await signAddress(address);
-      return address;
-    } catch (err: any) {
-      console.error('Connection error:', err);
-      setError(`Wallet connection failed: ${err.message}`);
-      throw err;
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFile(e.target.files[0]);
     }
   };
 
-  // Sign the user's address for authentication
-  const signAddress = async (address: string) => {
-    try {
-      console.log('Signing address:', address);
-      const sig = await window.ethereum.request({
-        method: 'personal_sign',
-        params: [address, address],
-      });
-      console.log('Signature created:', sig.slice(0, 10) + '...');
-      setSignature(sig);
-      return sig;
-    } catch (err: any) {
-      console.error('Signing error:', err);
-      setError(`Signing failed: ${err.message}`);
-      throw err;
-    }
+  // Format file size
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' bytes';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    if (bytes < 1024 * 1024 * 1024)
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
   };
 
-  // Try uploading to different IPFS gateways
-  const tryUploadWithGateways = async (
-    file: File,
-    addr: string,
-    sig: string,
-    currentIndex = 0
-  ): Promise<any> => {
-    if (currentIndex >= IPFS_GATEWAYS.length) {
-      throw new Error(
-        'Failed to upload to all available IPFS gateways. Please try again later.'
-      );
+  // Handle file upload with manual auth
+  const uploadFile = async () => {
+    if (!file) {
+      alert('Please select a file first');
+      return;
     }
 
-    const gatewayUrl = IPFS_GATEWAYS[currentIndex];
-    setCurrentGateway(gatewayUrl);
+    if (!publicKey.trim()) {
+      alert('Please enter your public key');
+      return;
+    }
+
+    if (!signature.trim()) {
+      alert('Please enter your signature');
+      return;
+    }
+
+    if (!api) {
+      await connectToNetwork();
+      if (!api) {
+        alert('Failed to connect to Crust Network. Please try again.');
+        return;
+      }
+    }
+
+    setStatus('Uploading');
+    setProgress(0);
 
     try {
-      console.log(
-        `Trying IPFS gateway (${currentIndex + 1}/${
-          IPFS_GATEWAYS.length
-        }): ${gatewayUrl}`
-      );
+      // Construct authorization header from provided credentials
+      const authHeaderRaw = `crust-${publicKey}:${signature}`;
+      const authToken = `Basic ${Buffer.from(authHeaderRaw).toString(
+        'base64'
+      )}`;
 
-      // Create auth header
-      const authBasic = btoa(`eth-${addr}:${sig}`);
-
-      // Create IPFS client with current gateway
-      const ipfs = create({
-        url: gatewayUrl,
-        headers: { authorization: 'Basic ' + authBasic },
-        timeout: 90000, // 90 seconds timeout (increased)
+      console.log('Connecting to IPFS gateway...');
+      const ipfsClient = create({
+        url: IPFS_GATEWAY_URL,
+        headers: { authorization: authToken },
+        timeout: 60000, // 60 second timeout
       });
 
-      // Upload file with progress tracking
-      const result = await ipfs.add(file, {
+      console.log('Uploading file to IPFS...');
+      const added = await ipfsClient.add(file, {
         progress: (prog) => {
           const progressPercent = Math.round((prog / file.size) * 100);
-          console.log(`Upload progress: ${progressPercent}%`);
-          setUploadProgress(progressPercent);
+          setProgress(Math.min(progressPercent, 90)); // Cap at 90% until order is placed
         },
       });
 
-      return result;
-    } catch (err) {
-      console.error(`Upload failed with gateway ${gatewayUrl}:`, err);
+      const cid = added.cid.toString();
+      const fileSize = added.size;
+      setFileCid(cid);
+      console.log(`File uploaded to IPFS with CID: ${cid}`);
 
-      // Try next gateway
-      return tryUploadWithGateways(file, addr, sig, currentIndex + 1);
-    }
-  };
+      // Place storage order on Crust Network
+      setStatus('PlacingOrder');
+      console.log('Placing storage order...');
+      const tx = api.tx.market.placeStorageOrder(cid, fileSize, 0, '');
 
-  // Upload file to IPFS and pin it on Crust Network
-  const uploadFile = async (file: File) => {
-    setUploading(true);
-    setError('');
-    setUploadProgress(0);
+      await new Promise<void>((resolve, reject) => {
+        tx.signAndSend(
+          publicKey,
+          {
+            signer: {
+              // This is a simplified signer that uses the provided signature
+              // In a real app, you would use Polkadot.js extension for signing
+              signRaw: async () => ({ signature }),
+            } as any,
+          },
+          ({ status, events, dispatchError }) => {
+            if (status.isInBlock) {
+              console.log(`Transaction included in block: ${status.asInBlock}`);
+              setProgress(95);
+            } else if (status.isFinalized) {
+              console.log(
+                `Transaction finalized in block: ${status.asFinalized}`
+              );
 
-    try {
-      // Connect wallet if not connected
-      const addr = account || (await connectWallet());
-      const sig = signature || (await signAddress(addr));
+              if (dispatchError) {
+                let errorMsg = 'Transaction failed';
+                if (dispatchError.isModule) {
+                  const decoded = api.registry.findMetaError(
+                    dispatchError.asModule
+                  );
+                  errorMsg = `${decoded.section}.${decoded.name}: ${decoded.docs}`;
+                } else {
+                  errorMsg = dispatchError.toString();
+                }
+                reject(new Error(errorMsg));
+                return;
+              }
 
-      console.log('Uploading to IPFS via gateway...');
+              setProgress(100);
 
-      // Try uploading to available gateways
-      const { cid, size } = await tryUploadWithGateways(file, addr, sig);
-      const fileCid = cid.toString();
-      console.log('Successfully uploaded to IPFS. CID:', fileCid);
+              // Add to uploaded files list
+              setUploadedFiles((prev) => [
+                ...prev,
+                {
+                  name: file.name,
+                  cid: cid,
+                  size: fileSize,
+                },
+              ]);
 
-      // Create auth header for pinning
-      const authBearer = btoa(`eth-${addr}:${sig}`);
-
-      // 3. Pin the file on Crust Network
-      console.log('Pinning file on Crust Network...');
-
-      // Try pinning with retries
-      let pinAttempts = 0;
-      let pinResponse = null;
-
-      while (pinAttempts < 3) {
-        try {
-          pinResponse = await fetch('https://pin.crustcode.com/psa/pins', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer ' + authBearer,
-            },
-            body: JSON.stringify({
-              cid: fileCid,
-              name: file.name,
-            }),
-          });
-
-          if (pinResponse.ok) break;
-
-          pinAttempts++;
-          console.log(`Pinning attempt ${pinAttempts} failed, retrying...`);
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2s between retries
-        } catch (pinErr) {
-          pinAttempts++;
-          console.error(`Pinning attempt ${pinAttempts} error:`, pinErr);
-        }
-      }
-
-      if (!pinResponse || !pinResponse.ok) {
-        const errorText = pinResponse
-          ? await pinResponse.text()
-          : 'No response';
-        throw new Error(
-          `Pinning failed after ${pinAttempts} attempts: ${errorText}`
-        );
-      }
-
-      const pinData = await pinResponse.json();
-      console.log('File pinned successfully. RequestID:', pinData.requestid);
-
-      // 4. Update UI with file info
-      const fileSize = size ? `${(size / 1024).toFixed(2)} KB` : 'Unknown size';
-
-      setFiles((prev) => [
-        ...prev,
-        {
-          cid: fileCid,
-          name: file.name,
-          size: fileSize,
-          requestId: pinData.requestid,
-        },
-      ]);
-    } catch (err: any) {
-      console.error('Upload error:', err);
-      setError(err.message || 'Something went wrong during upload.');
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
-    }
-  };
-
-  // Delete (unpin) a file from Crust Network
-  const deleteFile = async (requestId: string, fileCid: string) => {
-    setError('');
-    try {
-      if (!account) {
-        await connectWallet();
-      }
-
-      // Ensure we have a signature
-      const sig = 'cTKAAvkA2theASfjxvEGidrrUvVJ77Zb3WHMsM3Nx7Vx5Qzok';
-      const authBearer = btoa(`eth-${account}:${sig}`);
-
-      console.log('Unpinning file with request ID:', requestId);
-
-      const response = await fetch(
-        `https://pin.crustcode.com/psa/pins/${requestId}`,
-        {
-          method: 'DELETE',
-          headers: { Authorization: 'Bearer ' + authBearer },
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Unpinning failed (${response.status}): ${errorText}`);
-      }
-
-      // Remove file from list
-      setFiles(files.filter((f) => f.cid !== fileCid));
-      console.log('File unpinned successfully');
-    } catch (err: any) {
-      console.error('Delete error:', err);
-      setError(err.message || 'Something went wrong during file deletion.');
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      uploadFile(file);
+              setStatus('Success');
+              setFile(null);
+              resolve();
+            }
+          }
+        ).catch(reject);
+      });
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      setStatus('Error');
+      setErrorMessage(error.message || 'Unknown error occurred');
     }
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">CrustFiles Web3 Storage Demo</h2>
+    <div
+      style={{
+        padding: '20px',
+        marginTop: '50px',
+        fontFamily: 'Arial, sans-serif',
+        maxWidth: '800px',
+        margin: '0 auto',
+      }}
+    >
+      <h1>Manual Crust Network Authentication</h1>
 
-      <div className="mb-6">
-        <button
-          onClick={connectWallet}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-        >
-          {account
-            ? `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`
-            : 'Connect MetaMask'}
-        </button>
+      <div
+        style={{
+          marginBottom: '20px',
+          padding: '15px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '5px',
+          border: '1px solid #e9ecef',
+        }}
+      >
+        <h3>Understanding Authentication</h3>
+        <p>
+          <strong>Public Key:</strong> Your Crust Network account address (e.g.,
+          5FHneW46...). This is <em>not</em> your private key.
+        </p>
+        <p>
+          <strong>Signature:</strong> A cryptographic signature created by your
+          wallet by signing your public key. This is <em>not</em> your private
+          key.
+        </p>
       </div>
 
-      {account && (
-        <div className="mb-6 p-4 border-2 border-dashed border-gray-300 rounded-md">
+      <div style={{ marginBottom: '20px' }}>
+        <h3>Connection Status</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: isConnected ? '#4CAF50' : '#FF9800',
+            }}
+          ></div>
+          <span>
+            {isConnected ? 'Connected to Crust Network' : 'Not Connected'}
+          </span>
+          {!isConnected && (
+            <button
+              onClick={connectToNetwork}
+              style={{
+                padding: '5px 10px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginLeft: '10px',
+              }}
+            >
+              Connect
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '20px' }}>
+        <h3>Authentication Credentials</h3>
+        <div style={{ marginBottom: '10px' }}>
+          <label
+            htmlFor="publicKey"
+            style={{ display: 'block', marginBottom: '5px' }}
+          >
+            Public Key (Your Account Address):
+          </label>
+          <input
+            type="text"
+            id="publicKey"
+            value={publicKey}
+            onChange={(e) => setPublicKey(e.target.value)}
+            placeholder="e.g., 5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: '1px solid #ced4da',
+            }}
+          />
+        </div>
+        <div style={{ marginBottom: '10px' }}>
+          <label
+            htmlFor="signature"
+            style={{ display: 'block', marginBottom: '5px' }}
+          >
+            Signature:
+          </label>
+          <input
+            type="text"
+            id="signature"
+            value={signature}
+            onChange={(e) => setSignature(e.target.value)}
+            placeholder="Your signature"
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: '1px solid #ced4da',
+            }}
+          />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '20px' }}>
+        <h3>File Upload</h3>
+        <div style={{ marginBottom: '10px' }}>
           <input
             type="file"
             onChange={handleFileChange}
-            className="w-full"
-            disabled={uploading}
+            disabled={status === 'Uploading' || status === 'PlacingOrder'}
+            style={{ marginBottom: '10px' }}
           />
-          {uploading && (
-            <div className="mt-4">
-              <div className="text-sm text-blue-500">
-                Uploading via {currentGateway.split('/api')[0]}...{' '}
-                {uploadProgress}%
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
-                <div
-                  className="bg-blue-600 h-2.5 rounded-full"
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
-              </div>
+          {file && (
+            <div style={{ marginTop: '5px' }}>
+              Selected: {file.name} ({formatFileSize(file.size)})
             </div>
           )}
         </div>
-      )}
+        <button
+          onClick={uploadFile}
+          disabled={
+            !file || status === 'Uploading' || status === 'PlacingOrder'
+          }
+          style={{
+            padding: '8px 16px',
+            backgroundColor:
+              !file || status === 'Uploading' || status === 'PlacingOrder'
+                ? '#cccccc'
+                : '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor:
+              !file || status === 'Uploading' || status === 'PlacingOrder'
+                ? 'not-allowed'
+                : 'pointer',
+          }}
+        >
+          {status === 'Uploading' || status === 'PlacingOrder'
+            ? 'Uploading...'
+            : 'Upload File'}
+        </button>
+      </div>
 
-      {error && (
-        <div className="mb-6 p-3 bg-red-100 text-red-700 rounded">{error}</div>
-      )}
-
-      {files.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-xl font-semibold mb-4">Your Files</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200">
-              <thead>
-                <tr>
-                  <th className="py-2 px-4 border-b text-left">Name</th>
-                  <th className="py-2 px-4 border-b text-left">Size</th>
-                  <th className="py-2 px-4 border-b text-left">CID</th>
-                  <th className="py-2 px-4 border-b text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {files.map((file, index) => (
-                  <tr
-                    key={index}
-                    className={index % 2 === 0 ? 'bg-gray-50' : ''}
-                  >
-                    <td className="py-2 px-4 border-b">{file.name}</td>
-                    <td className="py-2 px-4 border-b">{file.size}</td>
-                    <td className="py-2 px-4 border-b">
-                      <span className="font-mono text-sm">
-                        {file.cid.slice(0, 6)}...{file.cid.slice(-6)}
-                      </span>
-                    </td>
-                    <td className="py-2 px-4 border-b">
-                      <div className="flex space-x-2">
-                        <a
-                          href={`https://ipfs-w3auth.crustapps.io/ipfs/${file.cid}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                        >
-                          View
-                        </a>
-                        <button
-                          onClick={() => deleteFile(file.requestId, file.cid)}
-                          className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {(status === 'Uploading' || status === 'PlacingOrder') && (
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '5px' }}>
+            {status === 'Uploading'
+              ? 'Uploading to IPFS...'
+              : 'Placing storage order...'}
+          </div>
+          <div
+            style={{
+              width: '100%',
+              backgroundColor: '#e0e0e0',
+              borderRadius: '4px',
+              height: '10px',
+            }}
+          >
+            <div
+              style={{
+                width: `${progress}%`,
+                backgroundColor: '#4CAF50',
+                height: '10px',
+                borderRadius: '4px',
+                transition: 'width 0.3s',
+              }}
+            ></div>
+          </div>
+          <div
+            style={{ textAlign: 'right', fontSize: '0.8rem', marginTop: '5px' }}
+          >
+            {progress}%
           </div>
         </div>
       )}
+
+      {status === 'Error' && (
+        <div
+          style={{
+            marginBottom: '20px',
+            padding: '10px',
+            backgroundColor: '#f8d7da',
+            color: '#721c24',
+            borderRadius: '4px',
+            border: '1px solid #f5c6cb',
+          }}
+        >
+          <strong>Error: </strong>
+          {errorMessage}
+        </div>
+      )}
+
+      {status === 'Success' && (
+        <div
+          style={{
+            marginBottom: '20px',
+            padding: '10px',
+            backgroundColor: '#d4edda',
+            color: '#155724',
+            borderRadius: '4px',
+            border: '1px solid #c3e6cb',
+          }}
+        >
+          <strong>Success! </strong>File uploaded with CID: {fileCid}
+        </div>
+      )}
+
+      {uploadedFiles.length > 0 && (
+        <div>
+          <h3>Uploaded Files</h3>
+          <div>
+            {uploadedFiles.map((f, idx) => (
+              <div
+                key={idx}
+                style={{
+                  marginBottom: '10px',
+                  padding: '10px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '4px',
+                  border: '1px solid #e9ecef',
+                }}
+              >
+                <div>
+                  <strong>{f.name}</strong> ({formatFileSize(f.size)})
+                </div>
+                <div
+                  style={{
+                    fontSize: '0.9rem',
+                    marginTop: '5px',
+                    wordBreak: 'break-all',
+                  }}
+                >
+                  CID: <code>{f.cid}</code>
+                </div>
+                <div style={{ marginTop: '5px' }}>
+                  <a
+                    href={`https://ipfs.io/ipfs/${f.cid}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: '#007bff', textDecoration: 'none' }}
+                  >
+                    View on IPFS Gateway
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div
+        style={{
+          marginTop: '30px',
+          padding: '15px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '5px',
+          border: '1px solid #e9ecef',
+        }}
+      >
+        <h3>How to Generate a Signature</h3>
+        <p>To generate a valid signature:</p>
+        <ol>
+          <li>Install the Polkadot.js browser extension</li>
+          <li>Create or import your Crust Network account</li>
+          <li>Use the extension to sign your public key (account address)</li>
+          <li>
+            The signature will be used to authenticate with the IPFS gateway
+          </li>
+        </ol>
+        <p>
+          Note: For proper integration, consider using the Polkadot.js extension
+          directly as shown in the reference implementation.
+        </p>
+      </div>
     </div>
   );
 };
