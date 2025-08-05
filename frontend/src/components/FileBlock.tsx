@@ -46,6 +46,8 @@ interface FileBlockProps {
   originalType?: string;
   decryptedUrl?: string;
   isDecrypting?: boolean;
+  onPreviewSelect?: () => void;
+  isSelected?: boolean;
 }
 
 const FileBlock: React.FC<FileBlockProps> = ({
@@ -63,6 +65,8 @@ const FileBlock: React.FC<FileBlockProps> = ({
   originalType,
   decryptedUrl: propDecryptedUrl,
   isDecrypting: propIsDecrypting = false,
+  onPreviewSelect,
+  isSelected = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [thumbnailError, setThumbnailError] = useState(false);
@@ -370,13 +374,21 @@ const FileBlock: React.FC<FileBlockProps> = ({
     <div
       className={`relative w-full h-[250px] border-2 rounded-md cursor-pointer overflow-hidden ${
         config.bg
-      } ${isHovered ? 'scale-105 shadow-2xl z-10' : 'shadow-sm'}`}
+      } ${isHovered ? 'scale-105 shadow-2xl z-10' : 'shadow-sm'} ${
+        isSelected ? 'ring-2 ring-[#00BFFF] border-[#00BFFF]' : ''
+      }`}
       style={{
         transition: 'all 400ms cubic-bezier(0.25, 0.1, 0.25, 1.0)',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={handleView}
+      onClick={() => {
+        if (onPreviewSelect) {
+          onPreviewSelect();
+        } else {
+          handleView();
+        }
+      }}
     >
       <div
         className={`absolute inset-0 flex items-center justify-center p-1 ${

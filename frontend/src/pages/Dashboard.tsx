@@ -16,9 +16,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { green, red } from '@mui/material/colors';
 import Fab from '@mui/material/Fab';
 import CheckIcon from '@mui/icons-material/Check';
+import FileTypePieChart from '@/components/FileTypePieChart';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 import { CloudUpload, Download } from 'lucide-react';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { useWalletConnect } from '../contexts/WalletConnectContext';
 import {
   deriveEncryptionKey,
@@ -32,6 +34,19 @@ import {
   DialogContent,
   DialogTitle,
 } from '@mui/material';
+
+import {
+  FileIcon,
+  Eye,
+  FileAudio,
+  FileVideo,
+  File,
+  FileText,
+  FileSpreadsheet,
+  FileArchive,
+  Loader2,
+  Trash2,
+} from 'lucide-react';
 import { fetchAndDecryptFile, guessFileType } from '../Utils/DecryptionLogic';
 
 // Add this function to decrypt files using the same encryption key
@@ -350,10 +365,32 @@ const Dashboard = () => {
         return;
       }
       setFile(selected);
-      setFileName(selected.name); // Store the file name
+      setFileName(selected.name);
+
+      const previewUrl = URL.createObjectURL(selected);
+      const fileType = getFileType(selected.name);
+      setPreviewFile({
+        id: 'local-preview',
+        name: selected.name,
+        size: formatSize(selected.size),
+        type: fileType,
+        previewUrl: previewUrl,
+        isLocal: true, // <-- THIS IS IMPORTANT
+        lastModified: new Date(selected.lastModified).toLocaleString(),
+      });
     }
   };
+  const [previewFile, setPreviewFile] = useState(null);
 
+  // Add a cleanup function for the preview URL
+  useEffect(() => {
+    return () => {
+      // Clean up the preview URL when component unmounts or when preview changes
+      if (previewFile?.previewUrl && previewFile.isLocal) {
+        URL.revokeObjectURL(previewFile.previewUrl);
+      }
+    };
+  }, [previewFile]);
   // Modify the uploadFile function
   const uploadFile = async () => {
     if (!file) {
@@ -393,16 +430,23 @@ const Dashboard = () => {
       const encryptedBlob = new Blob([encryptedData.encrypted], {
         type: 'application/encrypted',
       });
-      const encryptedFile = new File(
-        [encryptedBlob],
-        `${file.name}.encrypted`,
-        {
+      let encryptedFile;
+      try {
+        encryptedFile = new window.File(
+          [encryptedBlob],
+          `${file.name}.encrypted`,
+          {
+            type: 'application/encrypted',
+            lastModified: new Date().getTime(),
+          }
+        );
+      } catch (e) {
+        // Fallback for environments where File constructor is not available or options not supported
+        encryptedFile = new Blob([encryptedBlob], {
           type: 'application/encrypted',
-          lastModified: new Date().getTime(),
-        }
-      );
-
-      // 3. Create FormData with encrypted file and metadata
+        });
+        (encryptedFile as any).name = `${file.name}.encrypted`;
+      }
       const formData = new FormData();
       formData.append('file', encryptedFile);
 
@@ -917,13 +961,6 @@ const Dashboard = () => {
             >
               Storage Dashboard
             </h1>
-            <p
-              className={`mt-2 ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-              } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
-            >
-              Manage your decentralized storage files
-            </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -936,25 +973,8 @@ const Dashboard = () => {
                     : 'bg-white border-gray-200'
                 }  font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-wide`}
               >
-                <CardHeader>
-                  <CardTitle
-                    className={`${
-                      theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                    } tracking-wide uppercase`}
-                  >
-                    Upload to Storage
-                  </CardTitle>
-                </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label
-                      htmlFor="file-upload"
-                      className={
-                        theme === 'dark' ? 'text-white' : 'text-gray-900'
-                      }
-                    >
-                      Select File
-                    </Label>
                     <div className="flex items-center gap-5 mt-1">
                       <Input
                         id="file-upload"
@@ -1011,13 +1031,6 @@ const Dashboard = () => {
                         )}
                       </Box>
                     </div>
-                    <p
-                      className={`text-sm mt-1 ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                      }`}
-                    >
-                      Maximum file size: 200MB
-                    </p>
                   </div>
                   {error && <div style={{ color: 'red' }}>Error: {error}</div>}
                   {!isAuthenticated && (
@@ -1044,13 +1057,126 @@ const Dashboard = () => {
                     Preview File
                   </CardTitle>
                 </CardHeader>
+
                 <CardContent>
-                  <p>Preview selected file</p>
+                  {!previewFile ? (
+                    <p className="text-muted-foreground text-center py-8">
+                      Select a file to preview
+                    </p>
+                  ) : previewFile.isLocal ? (
+                    <div className="space-y-4">
+                      {/* Preview for locally selected file */}
+                      <div className="flex items-center justify-center mb-4 h-48">
+                        {previewFile.type === 'image' ? (
+                          <img
+                            src={previewFile.previewUrl}
+                            alt={previewFile.name}
+                            className="max-h-48 object-contain rounded-md shadow-md"
+                          />
+                        ) : previewFile.type === 'video' ? (
+                          <video
+                            src={previewFile.previewUrl}
+                            controls
+                            className="max-h-48 max-w-full"
+                          />
+                        ) : previewFile.type === 'pdf' ? (
+                          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                            <div
+                              style={{
+                                height: '100%',
+                                width: '100%',
+                                maxHeight: '200px',
+                              }}
+                            >
+                              <Viewer fileUrl={previewFile.previewUrl} />
+                            </div>
+                          </Worker>
+                        ) : previewFile.type === 'audio' ? (
+                          <div className="flex flex-col items-center">
+                            <FileAudio
+                              size={48}
+                              className="text-purple-600 mb-2"
+                            />
+                            <audio
+                              src={previewFile.previewUrl}
+                              controls
+                              className="w-full max-w-[250px]"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            {previewFile.type === 'doc' && (
+                              <FileText size={64} className="text-blue-600" />
+                            )}
+                            {previewFile.type === 'excel' && (
+                              <FileSpreadsheet
+                                size={64}
+                                className="text-green-600"
+                              />
+                            )}
+                            {previewFile.type === 'ppt' && (
+                              <FileIcon size={64} className="text-orange-600" />
+                            )}
+                            {previewFile.type === 'archive' && (
+                              <FileArchive
+                                size={64}
+                                className="text-yellow-600"
+                              />
+                            )}
+                            {(previewFile.type === 'other' ||
+                              !['doc', 'excel', 'ppt', 'archive'].includes(
+                                previewFile.type
+                              )) && (
+                              <FileIcon size={64} className="text-gray-500" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* File info */}
+                      <div className="grid grid-cols-2 gap-3 mt-4">
+                        <div>
+                          <h4 className="text-sm font-semibold text-muted-foreground">
+                            Name
+                          </h4>
+                          <p className="text-foreground truncate">
+                            {previewFile.name}
+                          </p>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-semibold text-muted-foreground">
+                            Size
+                          </h4>
+                          <p className="text-foreground">{previewFile.size}</p>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-semibold text-muted-foreground">
+                            Type
+                          </h4>
+                          <p className="text-foreground capitalize">
+                            {previewFile.type}
+                          </p>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-semibold text-muted-foreground">
+                            Last Modified
+                          </h4>
+                          <p className="text-foreground">
+                            {previewFile.lastModified}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p>No file selected</p>
+                  )}
                 </CardContent>
               </Card>
             </div>
 
-            {/* Status Panel */}
             <div className="space-y-6">
               <Card
                 className={`${
@@ -1114,45 +1240,13 @@ const Dashboard = () => {
                       }`}
                     >
                       Uploaded Size : {formatSize(totalSize)}
+                      <FileTypePieChart
+                        fileList={fileList}
+                        cids={cids}
+                        theme={theme}
+                      />
                     </p>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card
-                className={`${
-                  theme === 'dark'
-                    ? 'bg-gray-900 border-gray-800'
-                    : 'bg-white border-gray-200'
-                }  font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
-              >
-                <CardHeader>
-                  <CardTitle
-                    className={`${
-                      theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                    } tracking-wider uppercase font-bold `}
-                  >
-                    Cloud Infrastructure
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <p
-                      className={`text-sm ${
-                        theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                      } tracking-none `}
-                    >
-                      Cloud Connected
-                    </p>
-                  </div>
-                  <p
-                    className={`text-xs mt-2 ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                    }`}
-                  >
-                    Files are distributed across the InterPlanetary File System
-                  </p>
                 </CardContent>
               </Card>
             </div>

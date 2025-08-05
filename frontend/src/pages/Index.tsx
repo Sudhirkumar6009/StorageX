@@ -193,7 +193,7 @@ const Index = () => {
         >
           {/* Hero Section */}
           <div
-            className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-20 mb-10 max-w-full"
+            className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 max-w-full"
             style={{ maxWidth: '100vw' }}
           >
             <div
@@ -254,7 +254,7 @@ const Index = () => {
                   </span>
                 </p>
                 <p
-                  className={`md:text-xl mb-8 max-w-3xl ${
+                  className={`md:text-xl mb-8 max-w-3xl bold ${
                     theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                   }`}
                   style={{
