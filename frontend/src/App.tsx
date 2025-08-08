@@ -17,7 +17,7 @@ import { Web3Provider } from './contexts/Web3Context';
 import { WagmiProvider, createConfig, http } from 'wagmi';
 import { mainnet, sepolia } from 'wagmi/chains';
 import { BackTopContext } from './contexts/BackTopContext.js';
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/Dashboard/index.js';
 import DashDemo from './pages/DashDemo';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { WalletConnectProviderComponent } from './contexts/WalletConnectContext';

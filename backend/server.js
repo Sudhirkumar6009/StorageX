@@ -10,6 +10,7 @@ import deleteFile from "./Filebase/deleteFile.js";
 import uploadFile from "./Filebase/uploadFile.js";
 import cidMatchingMongo from "./Mongo/cidMatchingMongo.js";
 import googleAccount from "./Signin/googleAccount.js";
+import folderManager from "./Filebase/folderManager.js";
 
 dotenv.config({ path: "./.env" });
 
@@ -27,6 +28,7 @@ app.use(listoutFiles);
 app.use(deleteFile);
 app.use(cidMatchingMongo);
 app.use(googleAccount);
+app.use(folderManager);
 
 app.listen(PORT, () => {
   console.log(`Backend server running on port ${PORT}`);
