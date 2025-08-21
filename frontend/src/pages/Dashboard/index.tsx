@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeb3 } from '@/contexts/Web3Context';
@@ -21,7 +21,6 @@ import TextField from '@mui/material/TextField';
 import FileModal from '@/components/FileModal';
 import { fetchAndDecryptFile, guessFileType } from '@/Utils/DecryptionLogic';
 
-// Import our refactored components
 import UploadFile from './UploadFile';
 import VisualizeStorage from './VisualizeStorage';
 import PreviewSelectionFile from './PreviewSelectionFile';
