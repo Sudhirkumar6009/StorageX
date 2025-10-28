@@ -100,3 +100,45 @@
 #particles {
   animation-delay: 0.4s;
 }
+
+/* Prevent horizontal scrolling */
+body, html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Card animations fade-in effect */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ensure all containers don't overflow */
+* {
+  box-sizing: border-box;
+}
+
+/* Scroll progress bar animation */
+@keyframes progressGlow {
+  0%, 100% {
+    filter: brightness(1) saturate(1);
+  }
+  50% {
+    filter: brightness(1.15) saturate(1.1);
+  }
+}
+
+.scroll-progress-bar-fill {
+  animation: progressGlow 3s ease-in-out infinite;
+}

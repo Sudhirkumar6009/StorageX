@@ -9,6 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useModal } from './helperComponents/ConfirmationModal';
 import { useProfile } from '../contexts/ProfileContext';
 import { useWalletConnect } from '../contexts/WalletConnectContext';
+import { Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
@@ -23,6 +24,7 @@ const Navbar = () => {
   const { account: wcAccount, isConnected: wcIsConnected } = useWalletConnect();
   const backendUrl = import.meta.env.VITE_BACKEND_PORT_URL;
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -57,6 +59,16 @@ const Navbar = () => {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const disconnectEmail = async () => {
@@ -236,6 +248,64 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const primaryLinks = isAuthenticated
+    ? [
+        { to: '/', label: 'Home' },
+        { to: '/dashboard', label: 'Dashboard' },
+      ]
+    : [{ to: '/signup', label: 'Register Now' }];
+
+  const navButtonClasses = `rounded-full border border-transparent px-4 py-2 transition-colors duration-200 font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest text-sm`;
+
+  const navWidth = scrolled
+    ? 'min(1100px, calc(100vw - 1.5rem))'
+    : 'min(1200px, 100vw)';
+
+  const handleMobileNavigate = () => {
+    setMobileMenuOpen(false);
+  };
+
+  const profileMenuContent = (
+    <>
+      <Link to={`/profile`} onClick={handleMobileNavigate}>
+        <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
+          Manage Profile
+        </button>
+      </Link>
+      <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
+        Option 2
+      </button>
+      <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
+        Option 3
+      </button>
+      <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
+        Option 4
+      </button>
+      {authenticationType === 'metamask' ||
+      authenticationType === 'walletConnect' ? (
+        <button
+          onClick={() => {
+            handleMobileNavigate();
+            disconnectWalletthis();
+          }}
+          className="block text-left w-full font-bold px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
+        >
+          Disconnect Wallet
+        </button>
+      ) : (
+        <button
+          onClick={() => {
+            handleMobileNavigate();
+            disconnectEmail();
+          }}
+          className="block text-left w-full px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
+        >
+          Sign out
+        </button>
+      )}
+    </>
+  );
+
   return (
     <nav
       className={`
@@ -250,7 +320,7 @@ const Navbar = () => {
       `}
       style={{
         top: scrolled ? 20 : 0,
-        width: scrolled ? '90vw' : '100vw',
+        width: navWidth,
         margin: 0,
         borderColor: '#00bfff',
         borderRadius: scrolled ? '2rem' : '0rem',
@@ -259,7 +329,7 @@ const Navbar = () => {
           'top 0.4s cubic-bezier(.4,2,.6,1), width 0.4s cubic-bezier(.4,2,.6,1)',
       }}
     >
-      <div className="mx-auto px-2 sm:px-6 lg:px-8">
+      <div className="mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
@@ -278,110 +348,44 @@ const Navbar = () => {
               }`}
             />
           </Link>
-          <div className="flex items-center">
-            {isAuthenticated ? (
-              <div className="items-center h-full flex">
-                <div>
-                  <Link to="/" className="flex items-center h-full">
-                    <Button
-                      variant="outline"
-                      className={`rounded-none h-full sm:mr-5 font-10 border-0 transition-colors duration-200
-                      ${
-                        theme === 'dark'
-                          ? 'bg-transparent text-white hover:text-[#00BFFF]'
-                          : 'bg-transparent text-black hover:text-[#00BFFF]'
-                      }
-                      font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest
-                    `}
-                      style={{
-                        textTransform: 'none',
-                      }}
-                    >
-                      Home
-                    </Button>
-                  </Link>
-                </div>
-                <div>
-                  <Link to="/dashboard" className="flex items-center h-full">
-                    <Button
-                      variant="outline"
-                      className={`rounded-none border-0 font-normal sm:mr-5 capitalize transition-colors duration-200
-                      ${
-                        theme === 'dark'
-                          ? 'bg-transparent text-white hover:text-[#00BFFF]'
-                          : 'bg-transparent text-black hover:text-[#00BFFF]'
-                      }
-                      font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest
-                    `}
-                      style={{
-                        textTransform: 'none',
-                      }}
-                    >
-                      Dashboard
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <Link to="/signup" className="flex items-center h-full">
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2">
+              {primaryLinks.map(({ to, label }) => (
+                <Link key={label} to={to} className="flex items-center h-full">
                   <Button
-                    variant="outline"
-                    className={`rounded-none border-0 font-normal sm:mr-5 capitalize transition-colors duration-200
-                      ${
-                        theme === 'dark'
-                          ? 'bg-transparent text-white hover:text-[#00BFFF]'
-                          : 'bg-transparent text-black hover:text-[#00BFFF]'
-                      }
-                      font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest
-                    `}
-                    style={{
-                      textTransform: 'none',
-                    }}
+                    variant="ghost"
+                    className={`${navButtonClasses} ${
+                      theme === 'dark'
+                        ? 'text-white hover:text-[#00BFFF]'
+                        : 'text-black hover:text-[#00BFFF]'
+                    }`}
+                    onClick={() => setDropdownOpen(false)}
                   >
-                    Register Now
+                    {label}
                   </Button>
                 </Link>
-              </div>
-            )}
-            <div
-              className={`flex items-center space-x-4 font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider`}
-            >
+              ))}
               {isAuthenticated && (
-                <DropdownMenu>
-                  <Link to={`/profile`}>
-                    <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
-                      Manage Profile
-                    </button>
-                  </Link>
-                  <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
-                    Option 2
-                  </button>
-                  <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
-                    Option 3
-                  </button>
-                  <button className="block text-left w-full px-4 py-2 text-black hover:bg-[#00BFFF] dark:hover:text-white dark:text-white">
-                    Option 4
-                  </button>
-                  {authenticationType === 'metamask' ||
-                  authenticationType === 'walletConnect' ? (
-                    <button
-                      onClick={disconnectWalletthis}
-                      className="block text-left w-full font-bold px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
-                    >
-                      Disconnect Wallet
-                    </button>
-                  ) : (
-                    <button
-                      onClick={disconnectEmail}
-                      className="block text-left w-full px-4 py-2 bg-red-300 darsk:bg-red-500 dark:hover:bg-red-500 dark:bg-red-800 hover:bg-red-600 hover:text-white dark:hover:text-white"
-                    >
-                      Sign out
-                    </button>
-                  )}
-                </DropdownMenu>
+                <div className="hidden md:block">
+                  <DropdownMenu>{profileMenuContent}</DropdownMenu>
+                </div>
               )}
+              <Button
+                onClick={toggleTheme}
+                variant="outline"
+                size="icon"
+                className={`hidden md:inline-flex border-none p-2 rounded-full ${
+                  theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
+                }`}
+              >
+                {theme === 'dark' ? '☀️' : '🌙'}
+              </Button>
+            </div>
 
+            <div className="flex items-center gap-2 md:hidden">
+              {isAuthenticated && (
+                <DropdownMenu>{profileMenuContent}</DropdownMenu>
+              )}
               <Button
                 onClick={toggleTheme}
                 variant="outline"
@@ -392,10 +396,39 @@ const Navbar = () => {
               >
                 {theme === 'dark' ? '☀️' : '🌙'}
               </Button>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center rounded-full border border-[#00BFFF] p-2 text-[#00BFFF] transition-colors duration-200 hover:bg-[#00BFFF]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00BFFF]"
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                aria-label="Toggle navigation menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
             </div>
           </div>
         </div>
       </div>
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-[#00BFFF]/30 px-4 pb-4 pt-3">
+          <div className="flex flex-col gap-3">
+            {primaryLinks.map(({ to, label }) => (
+              <Link key={label} to={to} onClick={handleMobileNavigate}>
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start ${navButtonClasses} ${
+                    theme === 'dark'
+                      ? 'text-white hover:text-[#00BFFF]'
+                      : 'text-black hover:text-[#00BFFF]'
+                  }`}
+                >
+                  {label}
+                </Button>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

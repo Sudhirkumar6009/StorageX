@@ -37,7 +37,7 @@ const Cubes: React.FC<CubesProps> = ({
   maxAngle = 45,
   radius = 3,
   easing = 'power3.out',
-  duration = { enter: 0.3, leave: 0.6 },
+  duration = { enter: 3, leave: 10 },
   cellGap,
   borderStyle = '1px solid #fff',
   faceColor = '#060010',

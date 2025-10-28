@@ -26,6 +26,7 @@ import {
   useModal,
   DisconnectConfirmModal,
 } from './components/helperComponents/ConfirmationModal';
+import ScrollProgressBar from './components/ScrollProgressBar';
 
 const queryClient = new QueryClient();
 const wagmiConfig = createConfig({
@@ -60,8 +61,9 @@ const App = () => (
                         <Toaster />
                         <Sonner />
                         <div className="min-h-screen flex flex-col">
+                          <ScrollProgressBar />
                           <Navbar />
-                          <main className="flex-1">
+                          <main className="flex-1 pt-20 md:pt-24">
                             <Routes>
                               <Route path="/" element={<Index />} />
                               <Route path="/signup" element={<Signup />} />

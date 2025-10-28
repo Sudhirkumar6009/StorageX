@@ -101,22 +101,44 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  /* Custom scrollbar for dark theme */
-  .dark ::-webkit-scrollbar {
-    width: 8px;
+  /* Hide default scrollbar but keep functionality */
+  ::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    background: transparent;
   }
 
-  .dark ::-webkit-scrollbar-track {
-    background: #1a1a1a;
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 
-  .dark ::-webkit-scrollbar-thumb {
-    background: #404040;
-    border-radius: 4px;
+  ::-webkit-scrollbar-thumb {
+    background: transparent;
   }
 
-  .dark ::-webkit-scrollbar-thumb:hover {
-    background: #606060;
+  /* Firefox - hide scrollbar but keep functionality */
+  * {
+    scrollbar-width: none;
+  }
+
+  html {
+    -ms-overflow-style: none;
+  }
+
+  /* For IE and Edge legacy */
+  body {
+    -ms-overflow-style: none;
+  }
+
+  /* Enable GPU acceleration for smooth rendering */
+  .scroll-progress-bar-container {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+
+  .scroll-progress-bar-fill {
+    will-change: width;
+    transform: translateZ(0);
   }
 }
 
