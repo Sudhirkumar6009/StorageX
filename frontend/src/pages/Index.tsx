@@ -706,7 +706,7 @@ const Index = () => {
                   theme === 'dark' ? 'text-white' : 'text-gray-900'
                 } font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wide`}
               >
-                Developed by Modern Technology
+                Developed with Modern Technology
               </h2>
               <p
                 className={`text-lg max-w-5xl mx-auto ${
