@@ -25,6 +25,8 @@ const Navbar = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_PORT_URL;
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -257,9 +259,10 @@ const Navbar = () => {
 
   const navButtonClasses = `rounded-full border border-transparent px-4 py-2 transition-colors duration-200 font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] font-bold tracking-widest text-sm`;
 
-  const navWidth = scrolled
-    ? 'min(1100px, calc(100vw - 1.5rem))'
-    : 'min(1200px, 100vw)';
+  // Compact mode when hovered or scrolled
+  const isCompact = scrolled;
+
+  const navWidth = isCompact ? 'min(1100px, calc(100vw - 2rem))' : '100%';
 
   const handleMobileNavigate = () => {
     setMobileMenuOpen(false);
@@ -307,129 +310,219 @@ const Navbar = () => {
   );
 
   return (
-    <nav
-      className={`
-        fixed z-50 border-b transition-all duration-500 backdrop-blur-sm
-        left-1/2 -translate-x-1/2
-        ${
-          theme === 'dark'
-            ? 'bg-transparent/80 border-gray-800'
-            : 'bg-white/90 border-gray-200'
-        }
-        rounded-full shadow-lg
-      `}
-      style={{
-        top: scrolled ? 20 : 0,
-        width: navWidth,
-        margin: 0,
-        borderColor: '#00bfff',
-        borderRadius: scrolled ? '2rem' : '0rem',
-        transform: 'translateX(-50%)',
-        transition:
-          'top 0.4s cubic-bezier(.4,2,.6,1), width 0.4s cubic-bezier(.4,2,.6,1)',
-      }}
-    >
-      <div className="mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link
-            to="/"
-            className={`text-3xl transition-colors duration-200 pl-2 ${
-              theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-            }`}
-          >
-            <img
-              src="https://i.ibb.co/W4bsrLGW/logo.png"
-              alt="Logo"
-              className={`${
-                scrolled
-                  ? 'pr-4 h-6 w-13 inline-block mb-2'
-                  : 'pr-3 h-7 w-13 inline-block mb-1'
+    <>
+      <nav
+        ref={navRef}
+        className={`
+          fixed top-0 left-0 right-0 z-50 transition-all duration-300 will-change-transform
+          ${
+            scrolled
+              ? `mt-3 mx-4 sm:mx-8 md:mx-12 lg:mx-[100px] xl:mx-[150px] rounded-3xl ${
+                  theme === 'dark'
+                    ? 'bg-slate-950/90 backdrop-blur-md border border-[#00BFFF]/20 shadow-lg shadow-[#00BFFF]/5'
+                    : 'bg-white/90 backdrop-blur-md border border-[#00BFFF]/30 shadow-lg'
+                }`
+              : `${
+                  theme === 'dark'
+                    ? 'bg-gradient-to-b from-gray-900/80 to-transparent'
+                    : 'bg-gradient-to-b from-white/80 to-transparent'
+                }`
+          }
+        `}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link
+              to="/"
+              className={`flex items-center gap-2 group hover:scale-105 transition-transform duration-200 ${
+                theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
               }`}
-            />
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2">
-              {primaryLinks.map(({ to, label }) => (
-                <Link key={label} to={to} className="flex items-center h-full">
-                  <Button
-                    variant="ghost"
-                    className={`${navButtonClasses} ${
-                      theme === 'dark'
-                        ? 'text-white hover:text-[#00BFFF]'
-                        : 'text-black hover:text-[#00BFFF]'
-                    }`}
-                    onClick={() => setDropdownOpen(false)}
+            >
+              <img
+                src="https://i.ibb.co/W4bsrLGW/logo.png"
+                alt="Logo"
+                className="h-7 w-auto transition-transform duration-200 group-hover:scale-105"
+              />
+            </Link>
+            <div className="flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-2">
+                {primaryLinks.map(({ to, label }) => (
+                  <Link
+                    key={label}
+                    to={to}
+                    className="flex items-center h-full"
                   >
-                    {label}
-                  </Button>
-                </Link>
-              ))}
-              {isAuthenticated && (
-                <div className="hidden md:block">
-                  <DropdownMenu>{profileMenuContent}</DropdownMenu>
-                </div>
-              )}
-              <Button
-                onClick={toggleTheme}
-                variant="outline"
-                size="icon"
-                className={`hidden md:inline-flex border-none p-2 rounded-full ${
-                  theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                }`}
-              >
-                {theme === 'dark' ? '☀️' : '🌙'}
-              </Button>
-            </div>
+                    <Button
+                      variant="ghost"
+                      className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider ${
+                        theme === 'dark'
+                          ? 'text-gray-300 hover:text-[#00BFFF] hover:bg-[#00BFFF]/10'
+                          : 'text-gray-600 hover:text-[#00BFFF] hover:bg-[#00BFFF]/10'
+                      }`}
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      {label}
+                    </Button>
+                  </Link>
+                ))}
+                {isAuthenticated && (
+                  <div className="hidden md:block">
+                    <DropdownMenu>{profileMenuContent}</DropdownMenu>
+                  </div>
+                )}
+                <Button
+                  onClick={toggleTheme}
+                  variant="outline"
+                  size="icon"
+                  className={`hidden md:inline-flex p-3 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${
+                    theme === 'dark'
+                      ? 'bg-slate-800 text-[#00BFFF] hover:bg-slate-700 border-none'
+                      : 'bg-gray-100 text-[#00BFFF] hover:bg-gray-200 border-none'
+                  }`}
+                >
+                  {theme === 'dark' ? '☀️' : '🌙'}
+                </Button>
+              </div>
 
-            <div className="flex items-center gap-2 md:hidden">
-              {isAuthenticated && (
-                <DropdownMenu>{profileMenuContent}</DropdownMenu>
-              )}
-              <Button
-                onClick={toggleTheme}
-                variant="outline"
-                size="icon"
-                className={`border-none p-2 rounded-full ${
-                  theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
-                }`}
-              >
-                {theme === 'dark' ? '☀️' : '🌙'}
-              </Button>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-full border border-[#00BFFF] p-2 text-[#00BFFF] transition-colors duration-200 hover:bg-[#00BFFF]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00BFFF]"
-                onClick={() => setMobileMenuOpen((prev) => !prev)}
-                aria-label="Toggle navigation menu"
-                aria-expanded={mobileMenuOpen}
-              >
-                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
+              <div className="flex items-center gap-2 md:hidden">
+                <Button
+                  onClick={toggleTheme}
+                  variant="outline"
+                  size="icon"
+                  className={`p-3 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${
+                    theme === 'dark'
+                      ? 'bg-slate-800 text-[#00BFFF] hover:bg-slate-700 border-none'
+                      : 'bg-gray-100 text-[#00BFFF] hover:bg-gray-200 border-none'
+                  }`}
+                >
+                  {theme === 'dark' ? '☀️' : '🌙'}
+                </Button>
+                <button
+                  type="button"
+                  className={`p-3 rounded-xl transition-all duration-200 active:scale-95 ${
+                    theme === 'dark'
+                      ? 'bg-slate-800 text-white hover:bg-slate-700'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  }`}
+                  onClick={() => setMobileMenuOpen((prev) => !prev)}
+                  aria-label="Toggle navigation menu"
+                  aria-expanded={mobileMenuOpen}
+                >
+                  {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </nav>
+
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-[#00BFFF]/30 px-4 pb-4 pt-3">
-          <div className="flex flex-col gap-3">
+        <div
+          className={`
+            fixed left-4 right-4 z-40 md:hidden rounded-2xl
+            transition-all duration-300 ease-out
+            ${
+              theme === 'dark'
+                ? 'bg-slate-950/95 backdrop-blur-md border border-[#00BFFF]/20'
+                : 'bg-white/95 backdrop-blur-md border border-[#00BFFF]/30 shadow-lg'
+            }
+          `}
+          style={{ top: scrolled ? 'calc(76px + 12px)' : '76px' }}
+        >
+          <div className="px-4 py-4 space-y-2">
+            {/* Navigation Links */}
             {primaryLinks.map(({ to, label }) => (
               <Link key={label} to={to} onClick={handleMobileNavigate}>
-                <Button
-                  variant="ghost"
-                  className={`w-full justify-start ${navButtonClasses} ${
+                <button
+                  className={`block w-full text-left px-4 py-3 rounded-xl font-medium transition-colors duration-150 font-["Century_Gothic",CenturyGothic,AppleGothic,sans-serif] tracking-wider ${
                     theme === 'dark'
-                      ? 'text-white hover:text-[#00BFFF]'
-                      : 'text-black hover:text-[#00BFFF]'
+                      ? 'text-gray-300 hover:bg-slate-800 hover:text-[#00BFFF]'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-[#00BFFF]'
                   }`}
                 >
                   {label}
-                </Button>
+                </button>
               </Link>
             ))}
+
+            {/* Profile Section for authenticated users */}
+            {isAuthenticated && (
+              <div className="pt-2 mt-2 border-t border-[#00BFFF]/20">
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Avatar className="w-10 h-10 ring-2 ring-[#00BFFF]/50">
+                    {globalProfileImage || profileImage ? (
+                      <AvatarImage
+                        src={globalProfileImage || profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <AvatarFallback className="bg-gray-800">
+                        <img
+                          src="https://i.ibb.co/XZmv5M8X/profile.png"
+                          width={40}
+                          height={40}
+                          alt="Profile"
+                          className="rounded-full"
+                        />
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <span
+                    className={`text-sm font-mono truncate max-w-[180px] ${
+                      theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
+                    }`}
+                  >
+                    {authenticationType === 'metamask' && address
+                      ? `${address.slice(0, 6)}...${address.slice(-4)}`
+                      : authenticationType === 'walletConnect' && wcAccount
+                      ? `${wcAccount.slice(0, 6)}...${wcAccount.slice(-4)}`
+                      : authenticationType === 'google'
+                      ? user?.email || 'Google User'
+                      : ''}
+                  </span>
+                </div>
+                <Link to={`/profile`} onClick={handleMobileNavigate}>
+                  <button
+                    className={`block w-full text-left px-4 py-3 rounded-xl font-medium transition-colors duration-150 ${
+                      theme === 'dark'
+                        ? 'text-gray-300 hover:bg-slate-800 hover:text-[#00BFFF]'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-[#00BFFF]'
+                    }`}
+                  >
+                    Manage Profile
+                  </button>
+                </Link>
+                {authenticationType === 'metamask' ||
+                authenticationType === 'walletConnect' ? (
+                  <button
+                    onClick={() => {
+                      handleMobileNavigate();
+                      disconnectWalletthis();
+                    }}
+                    className="block w-full text-left font-bold px-4 py-3 mt-2 rounded-xl text-sm bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                  >
+                    Disconnect Wallet
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      handleMobileNavigate();
+                      disconnectEmail();
+                    }}
+                    className="block w-full text-left font-bold px-4 py-3 mt-2 rounded-xl text-sm bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                  >
+                    Sign out
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
-    </nav>
+    </>
   );
 };
 

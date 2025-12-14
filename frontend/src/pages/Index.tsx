@@ -193,7 +193,7 @@ const Index = () => {
         >
           {/* Hero Section */}
           <div
-            className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 max-w-full"
+            className="w-full mx-auto px-4 sm:px-6 lg:px-8 max-w-full"
             style={{ maxWidth: '100vw' }}
           >
             <div
@@ -237,11 +237,6 @@ const Index = () => {
                     theme === 'dark' ? 'text-[#00BFFF]' : 'text-[#00BFFF]'
                   } font-[sans-serif] tracking-widest `}
                 >
-                  <img
-                    src="https://i.ibb.co/W4bsrLGW/logo.png"
-                    alt="Logo"
-                    className="pr-5 h-12 w-34 sm:h-28 sm:w-32 inline-block mb-2 object-contain"
-                  />
                   StorageX
                 </h1>
                 <p>
